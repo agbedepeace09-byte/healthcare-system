@@ -1,3 +1,115 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+    --surface: #f8f9ff;
+    --surface-container-lowest: #ffffff;
+    --surface-container-low: #eef2ff;
+    --surface-container: #e6ebf7;
+    --surface-container-high: #dbe1ef;
+    --surface-container-highest: #cfd7e7;
+    --surface-variant: #d4d9e7;
+    --outline-variant: #c3c9d7;
+    --on-surface: #0b1c30;
+    --on-surface-variant: #434655;
+    --inverse-on-surface: #f5f9ff;
+    --secondary-fixed-dim: #5c6476;
+    --primary: #004ac6;
+    --on-primary: #ffffff;
+    --primary-container: #dbe7ff;
+    --on-primary-container: #00306f;
+    --tertiary: #9a4a06;
+    --tertiary-container: #ffe1c7;
+    --on-tertiary-container: #4e2200;
+    --shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.dark {
+    --surface: #0a0a0a;
+    --surface-container-lowest: #0a0a0a;
+    --surface-container-low: #171717;
+    --surface-container: #1f1f1f;
+    --surface-container-high: #262626;
+    --surface-container-highest: #333333;
+    --surface-variant: #262626;
+    --outline-variant: #262626;
+    --on-surface: #eaf1ff;
+    --on-surface-variant: #bec6e0;
+    --inverse-on-surface: #0b1c30;
+    --secondary-fixed-dim: #8a93ac;
+    --primary: #b4c5ff;
+    --on-primary: #0b1c30;
+    --primary-container: #213145;
+    --on-primary-container: #b4c5ff;
+    --tertiary: #ffd8b2;
+    --tertiary-container: #5b2c00;
+    --on-tertiary-container: #ffd8b2;
+    --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.32);
+}
+
+@theme inline {
+    --color-surface: var(--surface);
+    --color-surface-container-lowest: var(--surface-container-lowest);
+    --color-surface-container-low: var(--surface-container-low);
+    --color-surface-container: var(--surface-container);
+    --color-surface-container-high: var(--surface-container-high);
+    --color-surface-container-highest: var(--surface-container-highest);
+    --color-surface-variant: var(--surface-variant);
+    --color-outline-variant: var(--outline-variant);
+    --color-on-surface: var(--on-surface);
+    --color-on-surface-variant: var(--on-surface-variant);
+    --color-inverse-on-surface: var(--inverse-on-surface);
+    --color-secondary-fixed-dim: var(--secondary-fixed-dim);
+    --color-primary: var(--primary);
+    --color-on-primary: var(--on-primary);
+    --color-primary-container: var(--primary-container);
+    --color-on-primary-container: var(--on-primary-container);
+    --color-tertiary: var(--tertiary);
+    --color-tertiary-container: var(--tertiary-container);
+    --color-on-tertiary-container: var(--on-tertiary-container);
+
+    --font-sans: "Inter", sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+    --font-headline-lg: "Inter", sans-serif;
+    --font-title-lg: "Inter", sans-serif;
+    --font-body-md: "Inter", sans-serif;
+    --font-label-md: "Inter", sans-serif;
+    --font-display-lg: "Inter", sans-serif;
+    --font-code-sm: "JetBrains Mono", monospace;
+
+    --text-headline-lg: 2rem;
+    --text-headline-lg--line-height: 2.25rem;
+    --text-headline-lg--letter-spacing: -0.02em;
+    --text-headline-lg--font-weight: 700;
+
+    --text-title-lg: 1.25rem;
+    --text-title-lg--line-height: 1.75rem;
+    --text-title-lg--letter-spacing: -0.01em;
+    --text-title-lg--font-weight: 700;
+
+    --text-body-md: 1rem;
+    --text-body-md--line-height: 1.5rem;
+    --text-body-md--font-weight: 400;
+
+    --text-label-md: 0.875rem;
+    --text-label-md--line-height: 1.25rem;
+    --text-label-md--font-weight: 600;
+
+    --text-display-lg: 2.5rem;
+    --text-display-lg--line-height: 2.75rem;
+    --text-display-lg--letter-spacing: -0.03em;
+    --text-display-lg--font-weight: 700;
+
+    --text-code-sm: 0.875rem;
+    --text-code-sm--line-height: 1.25rem;
+    --text-code-sm--font-weight: 500;
+}
+
+@layer utilities {
+    .soft-shadow {
+        box-shadow: var(--shadow-soft);
+    }
+}
