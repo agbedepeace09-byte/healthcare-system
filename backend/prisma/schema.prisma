@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum Role {
+  DOCTOR
+  PHARMACIST
+  LAB_TECHNICIAN
+  ADMIN
+}
+
+enum RequestStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// ==========================================
+// MODELS
+// ==========================================
+
+model Staff {
+  id            Int       @id @default(autoincrement())
+  staffId       String    @unique @map("staff_id")
+  firstName     String    @map("first_name")
+  lastName      String    @map("last_name")
+  email         String    @unique
+  role          Role
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  appointments  Appointment[]
+  prescriptions Prescription[]
+  labRequests   LabRequest[]   @relation("OrderingDoctor")
+
+  @@map("staff")
+}
+
+model Patient {
+  id            Int       @id @default(autoincrement())
+  patientId     String    @unique @map("patient_id")
+  firstName     String    @map("first_name")
+  lastName      String    @map("last_name")
+  dateOfBirth   DateTime  @map("date_of_birth")
+  gender        String
+  contactNumber String?   @map("contact_number")
+  studentId     String?   @unique @map("student_id") // Specific to a school setting
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  appointments  Appointment[]
+  labRequests   LabRequest[]
+  prescriptions Prescription[]
+
+  @@map("patients")
+}
+
+model Appointment {
+  id              Int           @id @default(autoincrement())
+  appointmentId   String        @unique @map("appointment_id")
+  patientId       Int           @map("patient_id")
+  doctorId        Int           @map("doctor_id")
+  appointmentDate DateTime      @map("appointment_date")
+  reason          String
+  status          RequestStatus @default(PENDING)
+  notes           String?
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  patient         Patient       @relation(fields: [patientId], references: [id])
+  doctor          Staff         @relation(fields: [doctorId], references: [id])
+
+  @@map("appointments")
+}
+
+model LabRequest {
+  id              Int           @id @default(autoincrement())
+  requestId       String        @unique @map("request_id")
+  patientId       Int           @map("patient_id")
+  doctorId        Int           @map("doctor_id")
+  testType        String        @map("test_type")
+  status          RequestStatus @default(PENDING)
+  technicianNotes String?       @map("technician_notes")
+  resultFileUrl   String?       @map("result_file_url")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  patient         Patient       @relation(fields: [patientId], references: [id])
+  orderingDoctor  Staff         @relation("OrderingDoctor", fields: [doctorId], references: [id])
+
+  @@map("lab_requests")
+}
+
+model Prescription {
+  id              Int           @id @default(autoincrement())
+  prescriptionId  String        @unique @map("prescription_id")
+  patientId       Int           @map("patient_id")
+  doctorId        Int           @map("doctor_id")
+  medicationName  String        @map("medication_name")
+  dosage          String
+  instructions    String
+  status          RequestStatus @default(PENDING) // Tracks if Pharmacist has dispensed it
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  patient         Patient       @relation(fields: [patientId], references: [id])
+  doctor          Staff         @relation(fields: [doctorId], references: [id])
+
+  @@map("prescriptions")
+}
