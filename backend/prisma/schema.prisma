@@ -1,9 +1,8 @@
-generator client {
-  provider = "prisma-client-js"
-}
-
 datasource db {
   provider = "postgresql"
+}
+generator client {
+  provider = "prisma-client-js"
 }
 
 // ==========================================
@@ -13,7 +12,9 @@ datasource db {
 enum Role {
   DOCTOR
   PHARMACIST
-  LAB_TECHNICIAN
+  LABORATORIST
+  NURSE
+  RECEPTIONIST
   ADMIN
 }
 
@@ -29,14 +30,14 @@ enum RequestStatus {
 // ==========================================
 
 model Staff {
-  id            Int       @id @default(autoincrement())
-  staffId       String    @unique @map("staff_id")
-  firstName     String    @map("first_name")
-  lastName      String    @map("last_name")
-  email         String    @unique
-  role          Role
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  staffId   String   @unique @map("staff_id")
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  email     String   @unique
+  role      Role
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // Relations
   appointments  Appointment[]
@@ -47,16 +48,16 @@ model Staff {
 }
 
 model Patient {
-  id            Int       @id @default(autoincrement())
-  patientId     String    @unique @map("patient_id")
-  firstName     String    @map("first_name")
-  lastName      String    @map("last_name")
-  dateOfBirth   DateTime  @map("date_of_birth")
+  id            Int      @id @default(autoincrement())
+  patientId     String   @unique @map("patient_id")
+  firstName     String   @map("first_name")
+  lastName      String   @map("last_name")
+  dateOfBirth   DateTime @map("date_of_birth")
   gender        String
-  contactNumber String?   @map("contact_number")
-  studentId     String?   @unique @map("student_id") // Specific to a school setting
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  contactNumber String?  @map("contact_number")
+  studentId     String?  @unique @map("student_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   // Relations
   appointments  Appointment[]
@@ -79,8 +80,8 @@ model Appointment {
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  patient         Patient       @relation(fields: [patientId], references: [id])
-  doctor          Staff         @relation(fields: [doctorId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id])
+  doctor  Staff   @relation(fields: [doctorId], references: [id])
 
   @@map("appointments")
 }
@@ -98,27 +99,27 @@ model LabRequest {
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  patient         Patient       @relation(fields: [patientId], references: [id])
-  orderingDoctor  Staff         @relation("OrderingDoctor", fields: [doctorId], references: [id])
+  patient        Patient @relation(fields: [patientId], references: [id])
+  orderingDoctor Staff   @relation("OrderingDoctor", fields: [doctorId], references: [id])
 
   @@map("lab_requests")
 }
 
 model Prescription {
-  id              Int           @id @default(autoincrement())
-  prescriptionId  String        @unique @map("prescription_id")
-  patientId       Int           @map("patient_id")
-  doctorId        Int           @map("doctor_id")
-  medicationName  String        @map("medication_name")
-  dosage          String
-  instructions    String
-  status          RequestStatus @default(PENDING) // Tracks if Pharmacist has dispensed it
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
+  id             Int           @id @default(autoincrement())
+  prescriptionId String        @unique @map("prescription_id")
+  patientId      Int           @map("patient_id")
+  doctorId       Int           @map("doctor_id")
+  medicationName String        @map("medication_name")
+  dosage         String
+  instructions   String
+  status         RequestStatus @default(PENDING)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  patient         Patient       @relation(fields: [patientId], references: [id])
-  doctor          Staff         @relation(fields: [doctorId], references: [id])
+  patient Patient @relation(fields: [patientId], references: [id])
+  doctor  Staff   @relation(fields: [doctorId], references: [id])
 
   @@map("prescriptions")
 }
