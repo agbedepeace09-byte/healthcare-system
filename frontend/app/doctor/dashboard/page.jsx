@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 
 // Dummy queue data derived from your HTML template
@@ -44,6 +44,32 @@ const queueData = [
 ];
 
 export default function DoctorDashboard() {
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("All Patients");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredQueue = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return queueData.filter((patient) => {
+      const matchesStatus =
+        statusFilter === "All Patients" || patient.status === statusFilter;
+
+      if (!matchesStatus) {
+        return false;
+      }
+
+      if (!normalizedQuery) {
+        return true;
+      }
+
+      return [patient.name, patient.id, patient.complaint, patient.status]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedQuery);
+    });
+  }, [searchQuery, statusFilter]);
+
   return (
     <div className="max-w-[1280px] mx-auto w-full">
       {/* Page Header */}
@@ -56,12 +82,78 @@ export default function DoctorDashboard() {
             Review patients ready for consultation based on completed triage.
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="h-9 px-4 bg-surface-container-lowest dark:bg-[#0A0A0A] border border-outline-variant dark:border-[#262626] rounded-lg font-label-md text-label-md text-on-surface dark:text-gray-200 hover:bg-surface-container-low dark:hover:bg-[#171717] transition-colors flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">
-              filter_list
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <label className="relative block min-w-[240px]">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant dark:text-gray-400 pointer-events-none">
+              search
             </span>
-            Filter
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search patients..."
+              className="h-9 w-full rounded-lg border border-outline-variant dark:border-[#262626] bg-surface-container-lowest dark:bg-[#0A0A0A] pl-10 pr-3 font-label-md text-label-md text-on-surface dark:text-gray-200 placeholder:text-on-surface-variant dark:placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 dark:focus:border-primary-fixed-dim dark:focus:ring-primary-fixed-dim/20"
+            />
+          </label>
+
+          <div className="relative flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setFilterOpen((open) => !open)}
+              aria-expanded={filterOpen}
+              aria-haspopup="menu"
+              className="h-9 px-4 bg-surface-container-lowest dark:bg-[#0A0A0A] border border-outline-variant dark:border-[#262626] rounded-lg font-label-md text-label-md text-on-surface dark:text-gray-200 hover:bg-surface-container-low dark:hover:bg-[#171717] transition-colors flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-[18px]">
+                filter_list
+              </span>
+              Filter
+            </button>
+            {filterOpen ? (
+              <div className="absolute right-0 top-11 z-20 w-56 overflow-hidden rounded-xl border border-outline-variant dark:border-[#262626] bg-surface-container-lowest dark:bg-[#0A0A0A] shadow-lg">
+                {[
+                  "All Patients",
+                  "Urgent Ready",
+                  "In Consultation",
+                  "Ready",
+                ].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => {
+                      setStatusFilter(option);
+                      setFilterOpen(false);
+                    }}
+                    className={`flex w-full items-center justify-between px-4 py-3 text-left text-sm transition-colors hover:bg-surface-container-low dark:hover:bg-[#171717] ${statusFilter === option ? "text-primary dark:text-primary-fixed-dim font-semibold" : "text-on-surface dark:text-gray-200"}`}
+                  >
+                    <span>{option}</span>
+                    {statusFilter === option ? (
+                      <span className="material-symbols-outlined text-[18px]">
+                        check
+                      </span>
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-4 flex items-center justify-between text-sm text-on-surface-variant dark:text-gray-400">
+        <span>
+          Showing {filteredQueue.length} of {queueData.length} patients
+        </span>
+        <div className="flex items-center gap-4">
+          <button
+            type="button"
+            onClick={() => {
+              setStatusFilter("All Patients");
+              setSearchQuery("");
+            }}
+            className="font-medium text-primary dark:text-primary-fixed-dim hover:underline"
+          >
+            Clear filters
           </button>
         </div>
       </div>
@@ -90,50 +182,61 @@ export default function DoctorDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant dark:divide-[#262626]">
-              {queueData.map((patient) => (
-                <tr
-                  key={patient.id}
-                  className="hover:bg-slate-50 dark:hover:bg-[#0A0A0A] transition-colors"
-                >
-                  <td className="py-4 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-surface-container-highest dark:bg-[#171717] flex items-center justify-center text-primary dark:text-primary-fixed-dim font-bold text-sm">
-                        {patient.initials}
+              {filteredQueue.length > 0 ? (
+                filteredQueue.map((patient) => (
+                  <tr
+                    key={patient.id}
+                    className="hover:bg-slate-50 dark:hover:bg-[#0A0A0A] transition-colors"
+                  >
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-surface-container-highest dark:bg-[#171717] flex items-center justify-center text-primary dark:text-primary-fixed-dim font-bold text-sm">
+                          {patient.initials}
+                        </div>
+                        <div>
+                          <p className="font-body-md text-body-md font-bold text-on-surface dark:text-gray-100">
+                            {patient.name}
+                          </p>
+                          <p className="text-xs text-on-surface-variant dark:text-gray-500">
+                            ID: {patient.id} • {patient.age}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-body-md text-body-md font-bold text-on-surface dark:text-gray-100">
-                          {patient.name}
-                        </p>
-                        <p className="text-xs text-on-surface-variant dark:text-gray-500">
-                          ID: {patient.id} • {patient.age}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-4 text-body-md text-on-surface-variant dark:text-gray-300">
-                    {patient.time}
-                  </td>
-                  <td className="py-4 px-4 text-body-md text-on-surface dark:text-gray-200">
-                    {patient.complaint}
-                  </td>
-                  <td className="py-4 px-4">
-                    <span
-                      className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide ${patient.statusStyles}`}
-                    >
-                      {patient.status}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 text-right">
-                    <Link href={`/doctor/consult/${patient.appointmentId}`}>
-                      <button className="h-8 px-3 bg-primary text-on-primary rounded text-xs shadow-sm hover:opacity-90 transition-opacity bg-gradient-to-r from-primary to-blue-700">
-                        {patient.status === "In Consultation"
-                          ? "Resume"
-                          : "Open File"}
-                      </button>
-                    </Link>
+                    </td>
+                    <td className="py-4 px-4 text-body-md text-on-surface-variant dark:text-gray-300">
+                      {patient.time}
+                    </td>
+                    <td className="py-4 px-4 text-body-md text-on-surface dark:text-gray-200">
+                      {patient.complaint}
+                    </td>
+                    <td className="py-4 px-4">
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide ${patient.statusStyles}`}
+                      >
+                        {patient.status}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <Link href={`/doctor/consult/${patient.appointmentId}`}>
+                        <button className="h-8 px-3 bg-primary text-on-primary rounded text-xs shadow-sm hover:opacity-90 transition-opacity bg-gradient-to-r from-primary to-blue-700">
+                          {patient.status === "In Consultation"
+                            ? "Resume"
+                            : "Open File"}
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="py-12 px-4 text-center text-sm text-on-surface-variant dark:text-gray-400"
+                  >
+                    No patients match your current search and filter.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

@@ -31,6 +31,7 @@ import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
 import "@fontsource/jetbrains-mono/400.css";
+import "@fontsource/material-symbols-outlined";
 
 export default function RootLayout({
   children,
@@ -98,6 +99,7 @@ export default function RootLayout({
             <li>
               <Link
                 href="/doctor/dashboard"
+                onClick={() => setSidebarOpen(false)}
                 className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
               >
                 <Stethoscope size={18} />
@@ -107,6 +109,7 @@ export default function RootLayout({
             <li>
               <Link
                 href="/nurse/dashboard"
+                onClick={() => setSidebarOpen(false)}
                 className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
               >
                 <Heart size={18} />
@@ -116,6 +119,7 @@ export default function RootLayout({
             <li>
               <Link
                 href="/reception/dashboard"
+                onClick={() => setSidebarOpen(false)}
                 className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
               >
                 <ClipboardList size={18} />
@@ -125,6 +129,7 @@ export default function RootLayout({
             <li>
               <Link
                 href="/reception/register"
+                onClick={() => setSidebarOpen(false)}
                 className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
               >
                 <Users size={18} />
@@ -134,6 +139,7 @@ export default function RootLayout({
             <li>
               <Link
                 href="/pharmacy"
+                onClick={() => setSidebarOpen(false)}
                 className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
               >
                 <Pill size={18} />
@@ -143,6 +149,7 @@ export default function RootLayout({
             <li>
               <Link
                 href="/admin"
+                onClick={() => setSidebarOpen(false)}
                 className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
               >
                 <Settings size={18} />
@@ -152,6 +159,7 @@ export default function RootLayout({
             <li>
               <Link
                 href="/lab"
+                onClick={() => setSidebarOpen(false)}
                 className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
               >
                 <FlaskConical size={18} />
@@ -166,6 +174,7 @@ export default function RootLayout({
               <a
                 className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
                 href="#"
+                onClick={() => setSidebarOpen(false)}
               >
                 <HelpCircle size={18} />
                 <span>Help Center</span>
@@ -175,6 +184,7 @@ export default function RootLayout({
               <Link
                 className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
                 href="/login"
+                onClick={() => setSidebarOpen(false)}
               >
                 <LogOut size={18} />
                 <span>Logout</span>

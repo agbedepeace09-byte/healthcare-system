@@ -1,10 +1,27 @@
-const express = require('express');
-const cors = require('cors'); // Import cors
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+
+// Import the modular routers
+const labRoutes = require("./routes/labRoutes");
+
 const app = express();
-const labRoutes = require('./routes/labRoutes');
 
-app.use(cors()); // Enable CORS for all routes
+// Middleware
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
-app.use('/api/labs', labRoutes);
 
-app.listen(3000, () => console.log('Server running on port 3000'));
+// ==========================================
+// MOUNT ROUTES
+// ==========================================
+app.use("/api/labs", labRoutes);
+
+// Start the server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});

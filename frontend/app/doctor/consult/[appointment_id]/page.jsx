@@ -1,9 +1,29 @@
 "use client";
 
-import React from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+import {
+  getPatientByAppointmentId,
+  loadPatientVitals,
+} from "../../../lib/clinical-data";
 
-export default function ConsultationWorkspace({ params }) {
-  // In a real app, you would use params.appointment_id to fetch the specific patient's data
+export default function ConsultationWorkspace() {
+  const routeParams = useParams();
+  const appointmentId = routeParams?.appointment_id;
+
+  const patient = useMemo(() => {
+    return (
+      getPatientByAppointmentId(appointmentId) ?? getPatientByAppointmentId("1")
+    );
+  }, [appointmentId]);
+
+  const [currentVitals, setCurrentVitals] = useState(null);
+
+  useEffect(() => {
+    setCurrentVitals(loadPatientVitals(appointmentId));
+  }, [appointmentId]);
+
+  const displayVitals = currentVitals ?? {};
 
   return (
     <div className="flex-1 flex flex-col lg:flex-row gap-6 overflow-hidden min-h-[calc(100vh-8rem)]">
@@ -13,24 +33,25 @@ export default function ConsultationWorkspace({ params }) {
         <div className="bg-surface-container-lowest dark:bg-[#0A0A0A] border border-outline-variant dark:border-[#262626] rounded-xl p-6 shadow-soft flex flex-col items-center text-center">
           <div className="w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-surface-container-low dark:border-[#171717] relative">
             <img
-              alt="Patient Portrait"
+              alt={patient?.name ?? "Patient Portrait"}
               className="object-cover w-full h-full"
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuBm5owRY4LAsuXb8t0c2h92ak7sTCWrvBs3KMjJ8H6tBYuZXsx75xg8ZCZgqv8aYZGDbcCYB1jnivdiOc4v7z0cyoKzs-eDR_mvdQrehbV-Aq5lBuJnzPnCMbQteyU-k2SJgmjN8rEh_Rc7XpH8RPMyhj5ua1WeYeEdrsF56TOSR2vEalkGdmoaQ17XZsjLCXQojQyTXr2ezPFJd6IgHTWxJvENvtpoV5_zFMFepZBM6C0xfrql4Tl7XfvFwnWP1O-M3wVbF_YzUKXj"
             />
             <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white dark:border-[#0A0A0A]"></div>
           </div>
           <h2 className="font-headline-md text-[24px] font-semibold text-on-surface dark:text-gray-100 mb-1">
-            Eleanor Vance
+            {patient?.name ?? "Patient Not Found"}
           </h2>
           <p className="font-body-md text-sm text-on-surface-variant dark:text-gray-400 mb-4">
-            DOB: 12/04/1982 (42y) • Female
+            DOB: {patient?.dob ?? "--/--/----"} ({patient?.ageLabel ?? "--"}) •{" "}
+            {patient?.gender ?? "Unknown"}
           </p>
           <div className="w-full flex justify-center gap-2">
             <span className="bg-surface-container dark:bg-[#171717] px-3 py-1 rounded text-xs font-medium text-on-surface-variant dark:text-gray-300 uppercase tracking-wider">
-              ID: PT-88291
+              ID: {patient?.id ?? "Unknown"}
             </span>
             <span className="bg-secondary-container dark:bg-[#1a2340] text-on-secondary-fixed-variant dark:text-[#b4c5ff] px-3 py-1 rounded text-xs font-medium border border-outline-variant/30 dark:border-[#2a365c]">
-              O+ Blood
+              {patient?.bloodType ?? "--"} Blood
             </span>
           </div>
         </div>
@@ -43,6 +64,11 @@ export default function ConsultationWorkspace({ params }) {
             </span>
             Current Vitals
           </h3>
+          <div className="mb-4 rounded-lg border border-outline-variant/60 bg-surface-container-low px-3 py-2 text-xs text-on-surface-variant dark:border-[#262626] dark:bg-[#111111] dark:text-gray-400">
+            {currentVitals?.updatedAt
+              ? `Recorded ${new Date(currentVitals.updatedAt).toLocaleString()}`
+              : "No vitals recorded yet. Ask the nurse to capture them first."}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-background dark:bg-black border border-outline-variant/50 dark:border-[#262626] rounded-lg p-3 flex flex-col">
               <span className="text-xs text-on-surface-variant dark:text-gray-400 mb-1 flex items-center gap-1">
@@ -53,7 +79,7 @@ export default function ConsultationWorkspace({ params }) {
               </span>
               <div className="flex items-baseline gap-1">
                 <span className="font-headline-md text-xl font-semibold text-on-surface dark:text-gray-100">
-                  118/76
+                  {displayVitals.bp || "--/--"}
                 </span>
                 <span className="text-[10px] text-on-surface-variant dark:text-gray-500">
                   mmHg
@@ -69,7 +95,7 @@ export default function ConsultationWorkspace({ params }) {
               </span>
               <div className="flex items-baseline gap-1">
                 <span className="font-headline-md text-xl font-semibold text-on-surface dark:text-gray-100">
-                  72
+                  {displayVitals.pulse || "--"}
                 </span>
                 <span className="text-[10px] text-on-surface-variant dark:text-gray-500">
                   bpm
@@ -85,10 +111,10 @@ export default function ConsultationWorkspace({ params }) {
               </span>
               <div className="flex items-baseline gap-1">
                 <span className="font-headline-md text-xl font-semibold text-on-surface dark:text-gray-100">
-                  98.4
+                  {displayVitals.temp || "--"}
                 </span>
                 <span className="text-[10px] text-on-surface-variant dark:text-gray-500">
-                  °F
+                  °C
                 </span>
               </div>
             </div>
@@ -101,18 +127,26 @@ export default function ConsultationWorkspace({ params }) {
               </span>
               <div className="flex items-baseline gap-1">
                 <span className="font-headline-md text-xl font-semibold text-on-surface dark:text-gray-100">
-                  142
+                  {displayVitals.weight || "--"}
                 </span>
                 <span className="text-[10px] text-on-surface-variant dark:text-gray-500">
-                  lbs
+                  kg
                 </span>
               </div>
             </div>
           </div>
+          {displayVitals.notes ? (
+            <div className="mt-4 rounded-lg border border-outline-variant/60 bg-surface-container-low px-3 py-2 text-sm text-on-surface dark:border-[#262626] dark:bg-[#111111] dark:text-gray-200">
+              <span className="font-semibold text-on-surface-variant dark:text-gray-400">
+                Nurse notes:
+              </span>
+              {displayVitals.notes}
+            </div>
+          ) : null}
         </div>
 
         {/* Past Medical History */}
-        <div className="bg-surface-container-lowest dark:bg-[#0A0A0A] border border-outline-variant dark:border-[#262626] rounded-xl p-6 shadow-soft flex-1 flex flex-col min-h-[250px]">
+        <div className="bg-surface-container-lowest dark:bg-[#0A0A0A] border border-outline-variant dark:border-[#262626] rounded-xl p-6 shadow-soft flex-1 flex flex-col min-h-62.5">
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-title-lg text-lg font-semibold text-on-surface dark:text-gray-100 flex items-center gap-2">
               <span className="material-symbols-outlined text-primary text-[20px]">
@@ -127,7 +161,7 @@ export default function ConsultationWorkspace({ params }) {
           <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-4">
             {/* History Item 1 */}
             <div className="flex gap-3 relative">
-              <div className="w-px bg-outline-variant dark:bg-[#333] absolute left-[11px] top-6 bottom-[-16px]"></div>
+              <div className="w-px bg-outline-variant dark:bg-[#333] absolute left-2.75 top-6 -bottom-4"></div>
               <div className="w-6 h-6 rounded-full bg-surface-container-low dark:bg-[#171717] border border-outline-variant dark:border-[#333] flex items-center justify-center shrink-0 z-10">
                 <div className="w-2 h-2 rounded-full bg-primary"></div>
               </div>
@@ -146,7 +180,7 @@ export default function ConsultationWorkspace({ params }) {
 
             {/* History Item 2 */}
             <div className="flex gap-3 relative">
-              <div className="w-px bg-outline-variant dark:bg-[#333] absolute left-[11px] top-6 bottom-[-16px]"></div>
+              <div className="w-px bg-outline-variant dark:bg-[#333] absolute left-2.75 top-6 -bottom-4"></div>
               <div className="w-6 h-6 rounded-full bg-surface-container-low dark:bg-[#171717] border border-outline-variant dark:border-[#333] flex items-center justify-center shrink-0 z-10">
                 <div className="w-2 h-2 rounded-full bg-secondary dark:bg-gray-400"></div>
               </div>
@@ -190,7 +224,7 @@ export default function ConsultationWorkspace({ params }) {
               Active Consultation
             </h2>
             <span className="text-sm text-on-surface-variant dark:text-gray-400">
-              Dr. Sarah Jenkins • General Practice
+              {patient?.assignedDoctor ?? "Assigned Doctor"} • General Practice
             </span>
           </div>
           <div className="flex gap-2">
