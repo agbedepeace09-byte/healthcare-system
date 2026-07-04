@@ -1,382 +1,687 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
-  Activity,
-  BarChart3,
-  BedDouble,
-  CircleDollarSign,
-  ClipboardList,
-  Gauge,
-  HelpCircle,
-  LayoutDashboard,
-  LogOut,
-  Package2,
+  Filter,
+  Download,
   Search,
-  Settings,
-  Stethoscope,
+  Shield,
   Users,
+  Activity,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  MoreHorizontal,
+  X,
+  Plus,
+  ShieldAlert,
+  UserCheck,
+  UserX,
+  TrendingUp,
+  BarChart3,
+  History,
+  Trash2,
 } from "lucide-react";
 
-const navigationItems = [
-  { label: "Dashboard", icon: LayoutDashboard, active: true },
-  { label: "Patients", icon: BedDouble },
-  { label: "Staffing", icon: Users },
-  { label: "Inventory", icon: Package2 },
-  { label: "Analytics", icon: BarChart3 },
-  { label: "Settings", icon: Settings },
+const defaultStaff = [
+  { name: "Dr. J. Montague", role: "Physician", department: "Cardiology", status: "Active", lastActive: "2 min ago" },
+  { name: "Nurse S. Vance", role: "Registered Nurse", department: "ER", status: "Active", lastActive: "5 min ago" },
+  { name: "Dr. H. Dudley", role: "Physician", department: "Neurology", status: "Away", lastActive: "15 min ago" },
+  { name: "Receptionist A. Hill", role: "Receptionist", department: "Front Desk", status: "Active", lastActive: "1 min ago" },
+  { name: "Dr. L. Vance", role: "Physician", department: "Pediatrics", status: "Offline", lastActive: "1h ago" },
+  { name: "Nurse T. Crain", role: "Licensed Practical Nurse", department: "Surgery", status: "Active", lastActive: "3 min ago" },
+  { name: "Pharmacist M. Chen", role: "Clinical Pharmacist", department: "Pharmacy", status: "Active", lastActive: "8 min ago" },
 ];
 
-const statCards = [
-  {
-    label: "Total Patients",
-    value: "12,482",
-    trend: "+2.4%",
-    detail: "vs last month",
-    icon: Users,
-    trendTone: "text-emerald-600",
-  },
-  {
-    label: "Active Doctors",
-    value: "48",
-    trend: "Stable",
-    detail: "currently on shift",
-    icon: Stethoscope,
-    trendTone: "text-on-surface-variant",
-  },
-  {
-    label: "Prescriptions Today",
-    value: "342",
-    trend: "+12",
-    detail: "vs yesterday",
-    icon: ClipboardList,
-    trendTone: "text-emerald-600",
-  },
-  {
-    label: "Revenue / Cost (YTD)",
-    value: "$1.2M",
-    trend: "-1.1%",
-    detail: "margin variance",
-    icon: CircleDollarSign,
-    trendTone: "text-red-600",
-  },
+const trendData = [
+  { day: "Mon", date: "Jun 28", visits: 45 },
+  { day: "Tue", date: "Jun 29", visits: 52 },
+  { day: "Wed", date: "Jun 30", visits: 48 },
+  { day: "Thu", date: "Jul 1", visits: 61 },
+  { day: "Fri", date: "Jul 2", visits: 57 },
+  { day: "Sat", date: "Jul 3", visits: 63 },
+  { day: "Sun", date: "Jul 4", visits: 70 },
 ];
 
-const staffRows = [
-  {
-    initials: "SM",
-    name: "Dr. Sarah Mitchell",
-    role: "Attending Physician",
-    department: "Cardiology",
-    status: "Active",
-    tone: "bg-emerald-100 text-emerald-800 border-emerald-200",
-    dot: "bg-emerald-600",
-  },
-  {
-    initials: "JL",
-    name: "James Lawson",
-    role: "Registered Nurse",
-    department: "Emergency",
-    status: "On Leave",
-    tone: "bg-amber-100 text-amber-800 border-amber-200",
-    dot: "bg-amber-600",
-  },
-  {
-    initials: "AK",
-    name: "Dr. Aliyah Khan",
-    role: "Chief Surgeon",
-    department: "Neurology",
-    status: "Offline",
-    tone: "bg-surface-variant text-on-surface-variant border-outline-variant/50",
-    dot: "bg-outline",
-  },
-  {
-    initials: "MR",
-    name: "Michael Ross",
-    role: "System Administrator",
-    department: "IT Ops",
-    status: "Active",
-    tone: "bg-emerald-100 text-emerald-800 border-emerald-200",
-    dot: "bg-emerald-600",
-  },
+const predictions = [
+  { day: "Mon", date: "Jul 5", visits: 74 },
+  { day: "Tue", date: "Jul 6", visits: 78 },
+  { day: "Wed", date: "Jul 7", visits: 82 },
 ];
-
-function NavItem({ item }) {
-  const Icon = item.icon;
-
-  return (
-    <li>
-      <a
-        href="#"
-        className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${item.active ? "bg-secondary-container/40 text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-high"}`}
-      >
-        <Icon className="h-4 w-4" />
-        <span>{item.label}</span>
-      </a>
-    </li>
-  );
-}
-
-function StatCard({ card }) {
-  const Icon = card.icon;
-
-  return (
-    <div className="bg-surface-container-lowest border border-outline-variant/50 rounded-xl p-4 shadow-soft flex flex-col justify-between gap-6 hover:border-primary/30 transition-colors">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-label-md uppercase tracking-wider text-on-surface-variant">
-          {card.label}
-        </p>
-        <span className="rounded-md bg-primary/10 p-1.5 text-primary/80">
-          <Icon className="h-4 w-4" />
-        </span>
-      </div>
-      <div>
-        <p className="text-display-lg text-on-surface mb-1">{card.value}</p>
-        <div className="flex items-center gap-1 text-sm">
-          <span className={`font-medium ${card.trendTone}`}>{card.trend}</span>
-          <span className="text-on-surface-variant/70 text-xs ml-1">
-            {card.detail}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StaffRow({ staff }) {
-  return (
-    <tr className="group transition-colors hover:bg-surface-container-low/30">
-      <td className="py-3 px-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-container/20 text-primary font-bold text-xs">
-            {staff.initials}
-          </div>
-          <span className="font-medium text-on-surface">{staff.name}</span>
-        </div>
-      </td>
-      <td className="py-3 px-4 text-on-surface">{staff.role}</td>
-      <td className="py-3 px-4 text-on-surface-variant">{staff.department}</td>
-      <td className="py-3 px-4">
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${staff.tone}`}
-        >
-          <span className={`h-1.5 w-1.5 rounded-full ${staff.dot}`} />
-          {staff.status}
-        </span>
-      </td>
-      <td className="py-3 px-4 text-right">
-        <button
-          type="button"
-          className="opacity-0 transition-colors group-hover:opacity-100 text-outline hover:text-primary"
-          aria-label={`Edit ${staff.name}`}
-        >
-          <Activity className="h-5 w-5" />
-        </button>
-      </td>
-    </tr>
-  );
-}
 
 export default function AdminPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("");
+  const searchRef = useRef(null);
+  const filterRef = useRef(null);
+
+  const [actionMenuRow, setActionMenuRow] = useState(null);
+  const actionMenuRef = useRef(null);
+
+  const [activeStat, setActiveStat] = useState(null);
+  const [staffList, setStaffList] = useState(defaultStaff);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [resetPwTarget, setResetPwTarget] = useState(null);
+  const [toastMsg, setToastMsg] = useState(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showActivityLog, setShowActivityLog] = useState(false);
+  const [activityLog, setActivityLog] = useState(() => {
+    if (typeof window !== "undefined") {
+      try { return JSON.parse(localStorage.getItem("juwon:activity-log") || "[]"); } catch {}
+    }
+    return [];
+  });
+
+  const logActivity = useCallback((action, target) => {
+    const entry = {
+      id: performance.now(),
+      action,
+      target,
+      actor: "Admin",
+      timestamp: new Date().toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    };
+    setActivityLog((prev) => {
+      const updated = [entry, ...prev].slice(0, 100);
+      localStorage.setItem("juwon:activity-log", JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setSearchOpen(false);
+      }
+      if (filterRef.current && !filterRef.current.contains(e.target)) {
+        setFilterOpen(false);
+      }
+      if (actionMenuRef.current && !actionMenuRef.current.contains(e.target)) {
+        setActionMenuRow(null);
+      }
+    };
+    if (searchOpen || filterOpen || actionMenuRow) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [searchOpen, filterOpen, actionMenuRow]);
+
+  const showToast = (msg) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 3000);
+  };
+
+  const handleAction = (action, name) => {
+    setActionMenuRow(null);
+    if (action === "Disable") {
+      setStaffList((prev) => prev.map((s) => (s.name === name ? { ...s, status: "Offline" } : s)));
+      showToast(`"${name}" disabled`);
+      logActivity("Disabled account", name);
+    } else if (action === "Enable") {
+      setStaffList((prev) => prev.map((s) => (s.name === name ? { ...s, status: "Active" } : s)));
+      showToast(`"${name}" enabled`);
+      logActivity("Enabled account", name);
+    } else if (action === "Suspend") {
+      setStaffList((prev) => prev.map((s) => (s.name === name ? { ...s, status: "Away" } : s)));
+      showToast(`"${name}" suspended`);
+      logActivity("Suspended account", name);
+    } else if (action === "Reset Password") {
+      setResetPwTarget(name);
+    }
+  };
+
+  const handleCreateAccount = (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const newStaff = {
+      name: fd.get("name"),
+      role: fd.get("role"),
+      department: fd.get("department"),
+      status: "Active",
+      lastActive: "Just now",
+    };
+    setStaffList((prev) => [...prev, newStaff]);
+    setShowCreateModal(false);
+    showToast(`Account created for ${newStaff.name}`);
+    logActivity("Created account", newStaff.name);
+  };
+
+  const handleResetPassword = () => {
+    setStaffList((prev) =>
+      prev.map((s) => (s.name === resetPwTarget ? { ...s, lastActive: "Just now" } : s)),
+    );
+    setResetPwTarget(null);
+    showToast(`Password reset for "${resetPwTarget}"`);
+    logActivity("Reset password", resetPwTarget);
+  };
+
+  const handleStatClick = (stat) => {
+    if (activeStat === stat) {
+      setActiveStat(null);
+      setFilterStatus("");
+    } else {
+      setActiveStat(stat);
+      const statusMap = { total: "", active: "Active", pending: "Away", health: "" };
+      setFilterStatus(statusMap[stat]);
+    }
+    setPage(0);
+  };
+
+  const [page, setPage] = useState(0);
+  const perPage = 5;
+
+  const filteredRows = useMemo(() => {
+    let rows = staffList;
+    if (filterStatus) rows = rows.filter((r) => r.status === filterStatus);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      rows = rows.filter(
+        (r) =>
+          r.name.toLowerCase().includes(q) ||
+          r.role.toLowerCase().includes(q) ||
+          r.department.toLowerCase().includes(q),
+      );
+    }
+    return rows;
+  }, [searchQuery, filterStatus, staffList]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / perPage));
+  const safePage = Math.min(page, totalPages - 1);
+  const pageRows = filteredRows.slice(safePage * perPage, (safePage + 1) * perPage);
+
+  const exportCSV = () => {
+    const headers = ["Name,Role,Department,Status,Last Active"];
+    const rows = staffList.map((r) => `${r.name},${r.role},${r.department},${r.status},${r.lastActive}`);
+    const csv = [...headers, ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `staff-directory-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
-    <main className="min-h-screen bg-surface text-on-surface selection:bg-primary/20 selection:text-primary">
-      <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col border-r border-outline-variant bg-surface-container-lowest py-8">
-        <div className="mb-8 px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-on-primary shadow-soft">
-              <Gauge className="h-5 w-5" />
+    <div className="max-w-7xl mx-auto space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+        <div>
+          <h2 className="font-headline-lg text-headline-lg text-on-surface dark:text-inverse-on-surface">
+            Admin Dashboard
+          </h2>
+          <p className="font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim mt-1">
+            Manage system users, roles, and platform-wide settings.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <div className="relative" ref={searchRef}>
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className="px-4 py-2 bg-surface-container-lowest dark:bg-[#0a0a0a] border border-outline-variant dark:border-[#262626] rounded-md font-label-md text-label-md text-on-surface dark:text-inverse-on-surface hover:bg-surface-container-low dark:hover:bg-[#171717] transition-colors flex items-center gap-2"
+            >
+              <Search size={18} />
+              Search
+            </button>
+            {searchOpen && (
+              <div className="absolute top-full right-0 mt-2 w-72 rounded-xl border border-outline-variant dark:border-[#262626] bg-surface-container-lowest dark:bg-[#0a0a0a] shadow-xl z-50 p-3">
+                <div className="flex items-center gap-2">
+                  <Search size={16} className="text-on-surface-variant dark:text-secondary-fixed-dim shrink-0" />
+                  <input
+                    autoFocus
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by name, role, department..."
+                    className="w-full bg-transparent border-0 text-body-md text-on-surface dark:text-inverse-on-surface outline-none placeholder:text-on-surface-variant dark:placeholder:text-secondary-fixed-dim"
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery("")} className="text-on-surface-variant hover:text-on-surface dark:hover:text-inverse-on-surface">
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="relative" ref={filterRef}>
+            <button
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="px-4 py-2 bg-surface-container-lowest dark:bg-[#0a0a0a] border border-outline-variant dark:border-[#262626] rounded-md font-label-md text-label-md text-on-surface dark:text-inverse-on-surface hover:bg-surface-container-low dark:hover:bg-[#171717] transition-colors flex items-center gap-2 relative"
+            >
+              <Filter size={18} />
+              Filter
+              {filterStatus && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-primary text-[10px] font-bold text-on-primary flex items-center justify-center">1</span>
+              )}
+            </button>
+            {filterOpen && (
+              <div className="absolute top-full right-0 mt-2 w-48 rounded-xl border border-outline-variant dark:border-[#262626] bg-surface-container-lowest dark:bg-[#0a0a0a] shadow-xl z-50 p-3 space-y-1">
+                <button onClick={() => { setFilterStatus(""); setFilterOpen(false); }} className={`w-full text-left px-3 py-2 rounded-lg text-body-md transition-colors ${!filterStatus ? "bg-primary-container text-on-primary-container" : "text-on-surface dark:text-inverse-on-surface hover:bg-surface-container-low dark:hover:bg-[#171717]"}`}>All</button>
+                {["Active", "Away", "Offline"].map((s) => (
+                  <button key={s} onClick={() => { setFilterStatus(s); setFilterOpen(false); }} className={`w-full text-left px-3 py-2 rounded-lg text-body-md transition-colors ${filterStatus === s ? "bg-primary-container text-on-primary-container" : "text-on-surface dark:text-inverse-on-surface hover:bg-surface-container-low dark:hover:bg-[#171717]"}`}>{s}</button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => setShowActivityLog(!showActivityLog)}
+            className={`px-4 py-2 rounded-md font-label-md text-label-md transition-all flex items-center gap-2 ${showActivityLog ? "bg-primary-container text-on-primary-container" : "bg-surface-container-lowest dark:bg-[#0a0a0a] border border-outline-variant dark:border-[#262626] text-on-surface dark:text-inverse-on-surface hover:bg-surface-container-low dark:hover:bg-[#171717]"}`}
+          >
+            <History size={18} />
+            Activity Log
+          </button>
+          <button
+            onClick={() => setShowAnalytics(!showAnalytics)}
+            className={`px-4 py-2 rounded-md font-label-md text-label-md transition-all flex items-center gap-2 ${showAnalytics ? "bg-primary-container text-on-primary-container" : "bg-surface-container-lowest dark:bg-[#0a0a0a] border border-outline-variant dark:border-[#262626] text-on-surface dark:text-inverse-on-surface hover:bg-surface-container-low dark:hover:bg-[#171717]"}`}
+          >
+            <BarChart3 size={18} />
+            Analytics
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="px-4 py-2 bg-primary text-on-primary rounded-md font-label-md text-label-md hover:opacity-90 transition-opacity flex items-center gap-2"
+          >
+            <Plus size={18} />
+            Create Account
+          </button>
+          <button
+            onClick={exportCSV}
+            className="px-4 py-2 bg-surface-container-lowest dark:bg-[#0a0a0a] border border-outline-variant dark:border-[#262626] rounded-md font-label-md text-label-md text-on-surface dark:text-inverse-on-surface hover:bg-surface-container-low dark:hover:bg-[#171717] transition-colors flex items-center gap-2"
+          >
+            <Download size={18} />
+            Export
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <button onClick={() => handleStatClick("total")} className={`text-left bg-surface-container-lowest dark:bg-[#0a0a0a] p-4 rounded-xl border soft-shadow dark:shadow-none cursor-pointer transition-all ${activeStat === "total" ? "border-primary ring-2 ring-primary/20" : "border-outline-variant dark:border-[#262626]"}`}>
+          <div className="flex items-center gap-2 text-on-surface-variant dark:text-secondary-fixed-dim mb-2">
+            <Users size={20} />
+            <h3 className="font-label-md text-label-md">Total Staff</h3>
+          </div>
+          <p className="font-display-lg text-display-lg text-on-surface dark:text-inverse-on-surface">{staffList.length}</p>
+        </button>
+        <button onClick={() => handleStatClick("active")} className={`text-left bg-surface-container-lowest dark:bg-[#0a0a0a] p-4 rounded-xl border soft-shadow dark:shadow-none cursor-pointer transition-all ${activeStat === "active" ? "border-primary ring-2 ring-primary/20" : "border-outline-variant dark:border-[#262626]"}`}>
+          <div className="flex items-center gap-2 text-on-surface-variant dark:text-secondary-fixed-dim mb-2">
+            <Activity size={20} />
+            <h3 className="font-label-md text-label-md">Active Now</h3>
+          </div>
+          <p className="font-display-lg text-display-lg text-primary">{staffList.filter((s) => s.status === "Active").length}</p>
+        </button>
+        <button onClick={() => handleStatClick("pending")} className={`text-left bg-surface-container-lowest dark:bg-[#0a0a0a] p-4 rounded-xl border soft-shadow dark:shadow-none cursor-pointer transition-all ${activeStat === "pending" ? "border-primary ring-2 ring-primary/20" : "border-outline-variant dark:border-[#262626]"}`}>
+          <div className="flex items-center gap-2 text-on-surface-variant dark:text-secondary-fixed-dim mb-2">
+            <Clock size={20} />
+            <h3 className="font-label-md text-label-md">Away / Suspended</h3>
+          </div>
+          <p className="font-display-lg text-display-lg text-tertiary">{staffList.filter((s) => s.status === "Away").length}</p>
+        </button>
+        <button onClick={() => handleStatClick("health")} className={`text-left bg-surface-container-lowest dark:bg-[#0a0a0a] p-4 rounded-xl border soft-shadow dark:shadow-none cursor-pointer transition-all bg-gradient-to-br from-surface-container-lowest to-surface-container-low dark:from-[#0a0a0a] dark:to-[#171717] ${activeStat === "health" ? "border-primary ring-2 ring-primary/20" : "border-outline-variant dark:border-[#262626]"}`}>
+          <div className="flex items-center gap-2 text-on-surface-variant dark:text-secondary-fixed-dim mb-2">
+            <Shield size={20} />
+            <h3 className="font-label-md text-label-md">System Health</h3>
+          </div>
+          <p className="font-display-lg text-display-lg text-on-surface dark:text-inverse-on-surface">98%</p>
+        </button>
+      </div>
+
+      {/* Analytics panel */}
+      {showAnalytics && (
+        <div className="bg-surface-container-lowest dark:bg-[#0a0a0a] rounded-xl border border-outline-variant dark:border-[#262626] soft-shadow dark:shadow-none p-6 space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center">
+                <TrendingUp size={22} />
+              </div>
+              <div>
+                <h3 className="font-title-lg text-title-lg text-on-surface dark:text-inverse-on-surface">Predicted Analysis</h3>
+                <p className="font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">7-day trend forecast based on historical visit data</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-title-lg font-bold text-primary">
-                MediCenter
-              </h1>
-              <p className="text-label-md text-on-surface-variant">
-                Clinical Admin
-              </p>
+            <button onClick={() => setShowAnalytics(false)} className="text-on-surface-variant hover:text-on-surface dark:hover:text-inverse-on-surface">
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Trend bars */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-label-lg text-label-lg text-on-surface dark:text-inverse-on-surface">Daily Visits (Last 7 Days)</h4>
+              <span className="font-label-md text-label-md text-primary">+55.6% vs prev. period</span>
+            </div>
+            <div className="space-y-2">
+              {trendData.map((d) => {
+                const pct = Math.round((d.visits / 85) * 100);
+                return (
+                  <div key={d.day} className="flex items-center gap-3">
+                    <span className="w-8 text-right font-label-sm text-label-sm text-on-surface-variant dark:text-secondary-fixed-dim shrink-0">{d.day}</span>
+                    <div className="flex-1 h-7 bg-surface-container-low dark:bg-[#171717] rounded-md overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-md transition-all duration-500 flex items-center px-2"
+                        style={{ width: `${pct}%` }}
+                      >
+                        <span className="font-label-sm text-label-sm text-on-primary">{d.visits}</span>
+                      </div>
+                    </div>
+                    <span className="w-16 text-right font-body-sm text-body-sm text-on-surface-variant dark:text-secondary-fixed-dim shrink-0">{d.date}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </div>
 
-        <nav className="flex-1 overflow-y-auto px-3">
-          <ul className="space-y-1">
-            {navigationItems.map((item) => (
-              <NavItem key={item.label} item={item} />
+          {/* Prediction */}
+          <div>
+            <h4 className="font-label-lg text-label-lg text-on-surface dark:text-inverse-on-surface mb-3 flex items-center gap-2">
+              <TrendingUp size={18} className="text-tertiary" />
+              Predicted Next 3 Days
+            </h4>
+            <div className="grid grid-cols-3 gap-3">
+              {predictions.map((p) => {
+                const pct = Math.round((p.visits / 85) * 100);
+                return (
+                  <div key={p.day} className="bg-surface-container-low dark:bg-[#171717] rounded-xl p-4 border border-outline-variant dark:border-[#262626]">
+                    <p className="font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim">{p.day} {p.date}</p>
+                    <p className="font-display-md text-display-md text-tertiary mt-1">{p.visits}</p>
+                    <div className="mt-2 h-2 bg-surface-container-lowest dark:bg-[#0a0a0a] rounded-full overflow-hidden">
+                      <div className="h-full bg-tertiary rounded-full" style={{ width: `${pct}%` }}></div>
+                    </div>
+                    <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-secondary-fixed-dim mt-1">predicted visits</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Insights */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: "Avg. Daily Visits", value: "56.6", sub: "last 7 days" },
+              { label: "Peak Day", value: "Sun (70)", sub: "highest volume" },
+              { label: "Trend Direction", value: "Upward ↗", sub: "consistent growth" },
+              { label: "Next 3-Day Avg", value: "78.0", sub: "predicted" },
+            ].map((insight) => (
+              <div key={insight.label} className="bg-surface-container-low dark:bg-[#171717] rounded-xl p-3 border border-outline-variant dark:border-[#262626]">
+                <p className="font-label-sm text-label-sm text-on-surface-variant dark:text-secondary-fixed-dim mb-0.5">{insight.label}</p>
+                <p className="font-title-lg text-title-lg text-on-surface dark:text-inverse-on-surface">{insight.value}</p>
+                <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-secondary-fixed-dim">{insight.sub}</p>
+              </div>
             ))}
-          </ul>
-        </nav>
-
-        <div className="mt-auto border-t border-outline-variant/30 px-3 pt-4">
-          <ul className="space-y-1">
-            <li>
-              <a
-                href="#"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-on-surface-variant transition-colors hover:bg-surface-container-low"
-              >
-                <HelpCircle className="h-4 w-4" />
-                <span>Support</span>
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-on-surface-variant transition-colors hover:bg-surface-container-low"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Sign Out</span>
-              </a>
-            </li>
-          </ul>
+          </div>
         </div>
-      </aside>
+      )}
 
-      <section className="min-h-screen md:ml-64 flex flex-col">
-        <header className="sticky top-0 z-30 border-b border-outline-variant bg-surface/85 backdrop-blur-md">
-          <div className="flex items-center justify-between gap-4 px-4 py-3 md:px-8">
-            <div className="relative hidden w-full max-w-md items-center md:flex">
-              <Search className="absolute left-3 h-4 w-4 text-outline" />
-              <input
-                type="text"
-                placeholder="Search patients, staff, or records..."
-                className="w-full rounded-md border border-outline-variant bg-surface-container-lowest py-2 pl-10 pr-4 text-sm text-on-surface placeholder:text-outline/70 outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"
-              />
-            </div>
-
-            <div className="ml-auto flex items-center gap-2 md:gap-3">
-              <button
-                type="button"
-                className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-low"
-                aria-label="Toggle theme"
-              >
-                <span className="material-symbols-outlined">dark_mode</span>
-              </button>
-              <button
-                type="button"
-                className="relative rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-low"
-                aria-label="Notifications"
-              >
-                <span className="material-symbols-outlined">notifications</span>
-                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-error" />
-              </button>
-              <div className="ml-1 flex items-center border-l border-outline-variant/50 pl-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-container text-on-primary-container font-semibold">
-                  AD
-                </div>
+      {/* Activity Log */}
+      {showActivityLog && (
+        <div className="bg-surface-container-lowest dark:bg-[#0a0a0a] rounded-xl border border-outline-variant dark:border-[#262626] soft-shadow dark:shadow-none p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-tertiary-container text-on-tertiary-container flex items-center justify-center">
+                <History size={22} />
+              </div>
+              <div>
+                <h3 className="font-title-lg text-title-lg text-on-surface dark:text-inverse-on-surface">Activity Log</h3>
+                <p className="font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">Track all admin actions across the system</p>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+              {activityLog.length > 0 && (
+                <button
+                  onClick={() => {
+                    setActivityLog([]);
+                    localStorage.removeItem("juwon:activity-log");
+                  }}
+                  className="text-xs text-on-surface-variant hover:text-on-surface dark:hover:text-inverse-on-surface px-2 py-1 flex items-center gap-1"
+                >
+                  <Trash2 size={14} /> Clear
+                </button>
+              )}
+              <button onClick={() => setShowActivityLog(false)} className="text-on-surface-variant hover:text-on-surface dark:hover:text-inverse-on-surface">
+                <X size={20} />
+              </button>
+            </div>
           </div>
-        </header>
+          <div className="overflow-x-auto">
+            {activityLog.length === 0 ? (
+              <div className="py-8 text-center font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">
+                No activity recorded yet. Actions like creating accounts, disabling users, and resetting passwords will appear here.
+              </div>
+            ) : (
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-outline-variant dark:border-[#262626] bg-surface dark:bg-[#0a0a0a]">
+                    <th className="px-4 py-3 font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim uppercase tracking-wider w-[180px]">Timestamp</th>
+                    <th className="px-4 py-3 font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim uppercase tracking-wider">Action</th>
+                    <th className="px-4 py-3 font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim uppercase tracking-wider">Target</th>
+                    <th className="px-4 py-3 font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim uppercase tracking-wider w-[100px]">Actor</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-outline-variant dark:divide-[#262626]">
+                  {activityLog.map((entry) => (
+                    <tr key={entry.id} className="hover:bg-surface-container-low dark:hover:bg-[#171717] transition-colors">
+                      <td className="px-4 py-3 font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">{entry.timestamp}</td>
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide ${
+                          entry.action.includes("Created") ? "bg-primary-container text-on-primary-container" :
+                          entry.action.includes("Disabled") ? "bg-error-container text-on-error-container" :
+                          entry.action.includes("Suspended") ? "bg-tertiary-container text-on-tertiary-container" :
+                          entry.action.includes("Enabled") ? "bg-secondary-container text-on-secondary-container" :
+                          "bg-surface-variant text-on-surface-variant dark:bg-[#262626] dark:text-secondary-fixed-dim"
+                        }`}>
+                          {entry.action}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-body-md text-body-md font-medium text-on-surface dark:text-inverse-on-surface">{entry.target}</td>
+                      <td className="px-4 py-3 font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">{entry.actor}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
 
-        <main className="flex-1 overflow-auto p-4 md:p-8">
-          <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-8">
-            <section>
-              <h2 className="mb-1 text-headline-lg font-bold text-on-surface">
-                Overview
-              </h2>
-              <p className="text-body-md text-on-surface-variant">
-                Enterprise clinical metrics for today.
-              </p>
-            </section>
-
-            <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {statCards.map((card) => (
-                <StatCard key={card.label} card={card} />
+      <div className="bg-surface-container-lowest dark:bg-[#0a0a0a] rounded-xl border border-outline-variant dark:border-[#262626] soft-shadow dark:shadow-none overflow-hidden">
+        <div className="px-6 py-4 border-b border-outline-variant dark:border-[#262626] bg-surface-container-lowest dark:bg-[#0a0a0a] flex justify-between items-center">
+          <h3 className="font-title-lg text-title-lg text-on-surface dark:text-inverse-on-surface">
+            Staff Directory
+          </h3>
+          <div className="flex items-center gap-2 text-label-md font-label-md text-on-surface-variant dark:text-secondary-fixed-dim">
+            {activeStat ? (
+              <button onClick={() => handleStatClick(activeStat)} className="flex items-center gap-1.5 px-2 py-1 rounded bg-primary-container text-on-primary-container text-[11px] font-bold uppercase tracking-wide hover:opacity-80 transition-opacity">
+                Filtered: {activeStat === "total" ? "All Staff" : activeStat === "active" ? "Active" : activeStat === "pending" ? "Away / Pending" : "All Staff"}
+                <X size={14} />
+              </button>
+            ) : (
+              <>
+                <span className="w-2 h-2 rounded-full bg-primary inline-block"></span>{" "}
+                Live
+              </>
+            )}
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-outline-variant dark:border-[#262626] bg-surface dark:bg-[#0a0a0a]">
+                <th className="px-6 py-3 font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim uppercase tracking-wider">Role</th>
+                <th className="px-6 py-3 font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim uppercase tracking-wider">Department</th>
+                <th className="px-6 py-3 font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim uppercase tracking-wider">Status</th>
+                <th className="px-6 py-3 font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim uppercase tracking-wider">Last Active</th>
+                <th className="px-6 py-3 font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim uppercase tracking-wider text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant dark:divide-[#262626]">
+              {pageRows.map((row) => (
+                <tr key={row.name} className="hover:bg-surface-container-low dark:hover:bg-[#171717] transition-colors group cursor-pointer">
+                  <td className="px-6 py-3 font-body-md text-body-md font-medium text-on-surface dark:text-inverse-on-surface">{row.name}</td>
+                  <td className="px-6 py-3 font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">{row.role}</td>
+                  <td className="px-6 py-3 font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">{row.department}</td>
+                  <td className="px-6 py-3">
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wide ${
+                      row.status === "Active" ? "bg-primary-container text-on-primary-container" :
+                      row.status === "Away" ? "bg-tertiary-container text-on-tertiary-container" :
+                      "bg-surface-variant text-on-surface-variant dark:bg-[#262626] dark:text-secondary-fixed-dim"
+                    }`}>
+                      {row.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-3 font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">{row.lastActive}</td>
+                  <td className="px-6 py-3 text-right relative">
+                    <button
+                      onClick={() => setActionMenuRow(actionMenuRow === row.name ? null : row.name)}
+                      className="p-1 rounded text-on-surface-variant dark:text-secondary-fixed-dim hover:bg-surface dark:hover:bg-[#262626] transition-colors"
+                    >
+                      <MoreHorizontal size={18} />
+                    </button>
+                    {actionMenuRow === row.name && (
+                      <div
+                        ref={actionMenuRow === row.name ? actionMenuRef : null}
+                        className="absolute right-0 top-full mt-1 w-44 rounded-xl border border-outline-variant dark:border-[#262626] bg-surface-container-lowest dark:bg-[#0a0a0a] shadow-xl z-50 py-1"
+                      >
+                        {[
+                          "View Profile",
+                          "Edit",
+                          "Reset Password",
+                          ...(row.status === "Active"
+                            ? ["Suspend", "Disable"]
+                            : row.status === "Away"
+                              ? ["Enable", "Disable"]
+                              : ["Enable"]),
+                        ].map((action) => (
+                          <button
+                            key={action}
+                            onClick={() => handleAction(action, row.name)}
+                            className={`w-full text-left px-4 py-2 text-body-md transition-colors flex items-center gap-2 ${
+                              action === "Disable"
+                                ? "text-error hover:bg-error-container/20"
+                                : action === "Enable"
+                                  ? "text-primary hover:bg-primary-container/20"
+                                  : action === "Suspend"
+                                    ? "text-tertiary hover:bg-tertiary-container/20"
+                                    : "text-on-surface dark:text-inverse-on-surface hover:bg-surface-container-low dark:hover:bg-[#171717]"
+                            }`}
+                          >
+                            {action === "Disable" ? <UserX size={15} /> : action === "Enable" ? <UserCheck size={15} /> : action === "Suspend" ? <ShieldAlert size={15} /> : null}
+                            {action}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                </tr>
               ))}
-            </section>
-
-            <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <div className="flex h-[400px] flex-col rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-soft lg:col-span-1">
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-title-lg font-semibold text-on-surface">
-                    Patient Traffic
-                  </h3>
-                  <button
-                    type="button"
-                    className="rounded p-1 text-outline transition-colors hover:bg-surface-variant/50 hover:text-on-surface"
-                    aria-label="More options"
-                  >
-                    <span className="material-symbols-outlined text-sm">
-                      more_horiz
-                    </span>
-                  </button>
-                </div>
-                <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low/30">
-                  <div className="absolute bottom-0 h-[60%] w-full bg-gradient-to-t from-primary/20 to-transparent" />
-                  <svg
-                    className="absolute bottom-0 h-full w-full text-primary"
-                    preserveAspectRatio="none"
-                    viewBox="0 0 100 100"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M0,100 L0,70 Q10,60 20,75 T40,65 T60,80 T80,50 T100,40 L100,100 Z"
-                      fill="currentColor"
-                      opacity="0.1"
-                    />
-                    <path
-                      d="M0,70 Q10,60 20,75 T40,65 T60,80 T80,50 T100,40"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      vectorEffect="non-scaling-stroke"
-                    />
-                  </svg>
-                  <div className="absolute left-4 top-4 rounded border border-outline-variant/50 bg-surface/90 px-2 py-1 text-xs font-medium backdrop-blur">
-                    30 Days Trend
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex h-[400px] flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-soft lg:col-span-2">
-                <div className="flex items-center justify-between border-b border-outline-variant p-4">
-                  <div>
-                    <h3 className="text-title-lg font-semibold text-on-surface">
-                      Staff Management
-                    </h3>
-                    <p className="mt-1 text-xs text-on-surface-variant">
-                      Real-time personnel status.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-label-md text-on-primary transition-all hover:bg-primary/90 active:scale-95"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">
-                      add
-                    </span>
-                    Add Staff
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-auto">
-                  <table className="min-w-[600px] w-full border-collapse text-left">
-                    <thead className="sticky top-0 z-10 bg-surface-container-low/50 backdrop-blur-sm">
-                      <tr>
-                        <th className="border-b border-outline-variant/50 px-4 py-3 text-label-md font-medium text-on-surface-variant">
-                          Name
-                        </th>
-                        <th className="border-b border-outline-variant/50 px-4 py-3 text-label-md font-medium text-on-surface-variant">
-                          Role
-                        </th>
-                        <th className="border-b border-outline-variant/50 px-4 py-3 text-label-md font-medium text-on-surface-variant">
-                          Department
-                        </th>
-                        <th className="border-b border-outline-variant/50 px-4 py-3 text-label-md font-medium text-on-surface-variant">
-                          Status
-                        </th>
-                        <th className="border-b border-outline-variant/50 px-4 py-3 text-right text-label-md font-medium text-on-surface-variant">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-outline-variant/30 text-sm text-on-surface">
-                      {staffRows.map((staff) => (
-                        <StaffRow key={staff.name} staff={staff} />
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </section>
+            </tbody>
+          </table>
+        </div>
+        <div className="px-6 py-3 border-t border-outline-variant dark:border-[#262626] bg-surface-container-lowest dark:bg-[#0a0a0a] flex items-center justify-between">
+            <span className="font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">Showing {safePage * perPage + 1}-{Math.min((safePage + 1) * perPage, filteredRows.length)} of {filteredRows.length} staff members</span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={safePage === 0}
+              className={`w-8 h-8 flex items-center justify-center rounded border border-outline-variant dark:border-[#262626] transition-colors ${safePage === 0 ? "text-on-surface-variant dark:text-secondary-fixed-dim opacity-50 cursor-not-allowed" : "text-on-surface dark:text-inverse-on-surface hover:bg-surface-container-low dark:hover:bg-[#171717]"}`}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={safePage >= totalPages - 1}
+              className={`w-8 h-8 flex items-center justify-center rounded border border-outline-variant dark:border-[#262626] transition-colors ${safePage >= totalPages - 1 ? "text-on-surface-variant dark:text-secondary-fixed-dim opacity-50 cursor-not-allowed" : "text-on-surface dark:text-inverse-on-surface hover:bg-surface-container-low dark:hover:bg-[#171717]"}`}
+            >
+              <ChevronRight size={18} />
+            </button>
           </div>
-        </main>
-      </section>
-    </main>
+        </div>
+      </div>
+      {/* Toast notification */}
+      {toastMsg && (
+        <div className="fixed bottom-6 right-6 bg-primary-container text-on-primary-container px-5 py-3 rounded-xl shadow-2xl font-body-md text-body-md z-[100] animate-in fade-in slide-in-from-bottom-2">
+          {toastMsg}
+        </div>
+      )}
+
+      {/* Create Account modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowCreateModal(false)}>
+          <div className="bg-surface-container-lowest dark:bg-[#0a0a0a] rounded-2xl border border-outline-variant dark:border-[#262626] shadow-2xl w-full max-w-lg mx-4 p-6 space-y-5" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h3 className="font-title-lg text-title-lg text-on-surface dark:text-inverse-on-surface">Create Account</h3>
+              <button onClick={() => setShowCreateModal(false)} className="text-on-surface-variant hover:text-on-surface dark:hover:text-inverse-on-surface">
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleCreateAccount} className="space-y-4">
+              <div>
+                <label className="block font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim mb-1">Full Name</label>
+                <input name="name" required className="w-full px-3 py-2 rounded-lg border border-outline-variant dark:border-[#262626] bg-surface-container-low dark:bg-[#171717] text-on-surface dark:text-inverse-on-surface text-body-md outline-none focus:border-primary" placeholder="e.g. Dr. J. Smith" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim mb-1">Role</label>
+                  <select name="role" required className="w-full px-3 py-2 rounded-lg border border-outline-variant dark:border-[#262626] bg-surface-container-low dark:bg-[#171717] text-on-surface dark:text-inverse-on-surface text-body-md outline-none focus:border-primary">
+                    <option value="">Select</option>
+                    <option>Physician</option>
+                    <option>Registered Nurse</option>
+                    <option>Licensed Practical Nurse</option>
+                    <option>Receptionist</option>
+                    <option>Clinical Pharmacist</option>
+                    <option>Lab Technician</option>
+                    <option>Administrator</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim mb-1">Department</label>
+                  <select name="department" required className="w-full px-3 py-2 rounded-lg border border-outline-variant dark:border-[#262626] bg-surface-container-low dark:bg-[#171717] text-on-surface dark:text-inverse-on-surface text-body-md outline-none focus:border-primary">
+                    <option value="">Select</option>
+                    <option>Cardiology</option>
+                    <option>ER</option>
+                    <option>Neurology</option>
+                    <option>Pediatrics</option>
+                    <option>Surgery</option>
+                    <option>Pharmacy</option>
+                    <option>Front Desk</option>
+                    <option>Administration</option>
+                    <option>Lab</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setShowCreateModal(false)} className="px-4 py-2 rounded-lg border border-outline-variant dark:border-[#262626] text-on-surface dark:text-inverse-on-surface font-label-md text-label-md hover:bg-surface-container-low dark:hover:bg-[#171717]">Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:opacity-90">Create Account</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password confirmation modal */}
+      {resetPwTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setResetPwTarget(null)}>
+          <div className="bg-surface-container-lowest dark:bg-[#0a0a0a] rounded-2xl border border-outline-variant dark:border-[#262626] shadow-2xl w-full max-w-sm mx-4 p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-title-lg text-title-lg text-on-surface dark:text-inverse-on-surface">Reset Password</h3>
+            <p className="font-body-md text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">
+              Send password reset link to <strong className="text-on-surface dark:text-inverse-on-surface">{resetPwTarget}</strong>?
+            </p>
+            <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-secondary-fixed-dim">
+              A temporary password will be generated and the user will be prompted to change it on next login.
+            </p>
+            <div className="flex justify-end gap-2 pt-1">
+              <button onClick={() => setResetPwTarget(null)} className="px-4 py-2 rounded-lg border border-outline-variant dark:border-[#262626] text-on-surface dark:text-inverse-on-surface font-label-md text-label-md hover:bg-surface-container-low dark:hover:bg-[#171717]">Cancel</button>
+              <button onClick={handleResetPassword} className="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:opacity-90">Send Reset Link</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { 
   ChevronRight, 
   Clock, 
@@ -10,8 +11,22 @@ import {
   Activity, 
   Send 
 } from "lucide-react";
+import { savePatientVitals, getPatientByAppointmentId } from "../../../lib/clinical-data";
+import { createNotification } from "../../../lib/notifications";
 
 export default function CaptureVitalsPage() {
+  const params = useParams();
+  const router = useRouter();
+  const appointmentId = params?.appointment_id;
+
+  const patient = useMemo(() => getPatientByAppointmentId(appointmentId), [appointmentId]);
+
+  const patientName = patient?.name ?? "Unknown Patient";
+  const patientId = patient?.id ?? "Unknown";
+  const patientAge = patient?.age ?? "--";
+  const patientGender = patient?.gender ?? "--";
+  const assignedDoctor = patient?.assignedDoctor ?? "--";
+
   // Local state for the vitals form
   const [formData, setFormData] = useState({
     bp: "120/80", // Pre-filled for visual parity with your design
@@ -27,8 +42,20 @@ export default function CaptureVitalsPage() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Submitting vitals payload:", formData);
-    // Integration point: Dispatch API call to save vitals here
+    if (!appointmentId) return;
+    savePatientVitals(appointmentId, formData);
+    createNotification({
+      title: "Vitals Recorded",
+      message: `Vitals captured for ${patientName}`,
+      patientName: `${patientName} (${patientId})`,
+      type: "info",
+      appointmentId,
+    });
+    router.push("/nurse/dashboard");
+  };
+
+  const handleCancel = () => {
+    router.push("/nurse/dashboard");
   };
 
   return (
@@ -38,16 +65,16 @@ export default function CaptureVitalsPage() {
       <nav aria-label="Breadcrumb" className="flex text-on-surface-variant dark:text-secondary-fixed-dim font-label-md text-label-md mb-stack-lg">
         <ol className="inline-flex items-center space-x-1 md:space-x-3">
           <li className="inline-flex items-center">
-            <button className="hover:text-primary dark:hover:text-primary-fixed-dim transition-colors">
+            <button onClick={() => router.push("/nurse/dashboard")} className="hover:text-primary dark:hover:text-primary-fixed-dim transition-colors">
               Patients
             </button>
           </li>
           <li>
             <div className="flex items-center">
               <ChevronRight size={16} className="mx-1" />
-              <button className="hover:text-primary dark:hover:text-primary-fixed-dim transition-colors">
-                Sarah Jenkins
-              </button>
+              <span className="text-on-surface-variant dark:text-secondary-fixed-dim">
+                {patientName}
+              </span>
             </div>
           </li>
           <li aria-current="page">
@@ -68,7 +95,7 @@ export default function CaptureVitalsPage() {
         </h2>
         <div className="font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim flex items-center gap-2">
           <Clock size={18} />
-          Today, 10:45 AM
+          Today, {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
         </div>
       </div>
 
@@ -76,29 +103,26 @@ export default function CaptureVitalsPage() {
       <div className="bg-surface-container-lowest dark:bg-[#0A0A0A] rounded border border-outline-variant dark:border-[#262626] p-stack-md mb-stack-lg flex flex-wrap md:flex-nowrap items-center gap-6 shadow-[0px_1px_3px_rgba(0,0,0,0.1),0px_10px_20px_rgba(0,0,0,0.05)] dark:shadow-none relative overflow-hidden">
         <div className="absolute top-0 left-0 w-1 h-full bg-primary dark:bg-primary-fixed-dim"></div>
         
-        {/* Note: In a real Next app, swap <img> for <Image> if you have external domains configured */}
-        <img 
-          alt="Sarah Jenkins" 
-          className="w-16 h-16 rounded-full border border-outline-variant dark:border-[#262626] object-cover" 
-          src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRmdp0VArlfZ8cADs8P5qB202UC365VBB_SigEo_40TQX8zwvxXDKtHFe05Kdk2G452O3nTRoJ-fozq4YdvkQokqvqSZjbZ70FqaNoJWwWbo3ShWBvY4IIJq2GrIvSO27EW2BxysbHzcWkAAG4rRqkMF2ZFP5H6ExaQO9EDt3sd8lkSV3Py7E2RmjEMFBJhIorDls5UJ6zOL2q44w2iYDr_MlgZ7Yvwemt4bQU6J6N6kTYOscvnu0VQuL0dP343AUNPLjcj0Jrn0gP"
-        />
+        <div className="w-16 h-16 rounded-full border border-outline-variant dark:border-[#262626] flex items-center justify-center bg-primary-container text-on-primary-container text-xl font-bold">
+          {patientName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
+        </div>
         
         <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <p className="font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim mb-1">Patient Name</p>
-            <p className="font-title-lg text-title-lg text-on-surface dark:text-inverse-on-surface">Sarah Jenkins</p>
+            <p className="font-title-lg text-title-lg text-on-surface dark:text-inverse-on-surface">{patientName}</p>
           </div>
           <div>
             <p className="font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim mb-1">Patient ID</p>
-            <p className="font-body-lg text-body-lg text-on-surface dark:text-inverse-on-surface font-code-sm">PT-8472</p>
+            <p className="font-body-lg text-body-lg text-on-surface dark:text-inverse-on-surface font-code-sm">{patientId}</p>
           </div>
           <div>
             <p className="font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim mb-1">Age / Gender</p>
-            <p className="font-body-lg text-body-lg text-on-surface dark:text-inverse-on-surface">42 / Female</p>
+            <p className="font-body-lg text-body-lg text-on-surface dark:text-inverse-on-surface">{patientAge} / {patientGender}</p>
           </div>
           <div>
             <p className="font-label-md text-label-md text-on-surface-variant dark:text-secondary-fixed-dim mb-1">Primary Care</p>
-            <p className="font-body-lg text-body-lg text-on-surface dark:text-inverse-on-surface">Dr. A. Mercer</p>
+            <p className="font-body-lg text-body-lg text-on-surface dark:text-inverse-on-surface">{assignedDoctor}</p>
           </div>
         </div>
       </div>
@@ -222,6 +246,7 @@ export default function CaptureVitalsPage() {
         <div className="flex items-center justify-end gap-4 pt-stack-md border-t border-outline-variant dark:border-[#262626]">
           <button 
             type="button" 
+            onClick={handleCancel}
             className="px-6 py-2 rounded bg-surface-container-lowest dark:bg-black text-on-surface dark:text-inverse-on-surface font-label-md text-label-md border border-outline-variant dark:border-[#262626] hover:bg-surface-container-low dark:hover:bg-[#171717] transition-colors"
           >
             Cancel

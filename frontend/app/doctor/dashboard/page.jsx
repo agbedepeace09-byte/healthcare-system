@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
+import { createNotification } from "../../lib/notifications";
+import { getQueueByStatuses, updateQueueStatus } from "../../lib/patient-queue";
 
-// Dummy queue data derived from your HTML template
-const queueData = [
+const defaultQueue = [
   {
     id: "PT-8472",
     appointmentId: "1",
@@ -43,15 +44,76 @@ const queueData = [
   },
 ];
 
+function mapQueueToDoctorPatient(qp) {
+  const mins = Math.floor((Date.now() - new Date(qp.checkedInAt).getTime()) / 60000);
+  const timeLabel = mins < 1 ? "Just now" : `${mins}m ago`;
+  const isUrgent = qp.waitingSeverity === "high";
+  return {
+    id: qp.patientId,
+    appointmentId: qp.appointmentId,
+    name: qp.name,
+    initials: qp.initials || (qp.firstName?.[0] || "") + (qp.lastName?.[0] || ""),
+    age: "",
+    time: timeLabel,
+    complaint: qp.complaint || "No complaint recorded",
+    status: isUrgent ? "Urgent Ready" : "Ready",
+    statusStyles: isUrgent
+      ? "bg-error-container text-on-error-container dark:bg-[#4a0004] dark:text-[#ffdad6]"
+      : "bg-secondary-container text-on-secondary-container dark:bg-[#1a2340] dark:text-[#b4c5ff]",
+  };
+}
+
 export default function DoctorDashboard() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("All Patients");
   const [searchQuery, setSearchQuery] = useState("");
+  const [queue, setQueue] = useState(() => {
+    if (typeof window === "undefined") return defaultQueue;
+    const queuePts = getQueueByStatuses(["Ready for Consultation", "Waiting for Doctor Review"]).map(mapQueueToDoctorPatient);
+    return [...queuePts, ...defaultQueue];
+  });
+
+  useEffect(() => {
+    const refreshPatients = () => {
+      const queuePts = getQueueByStatuses(["Ready for Consultation", "Waiting for Doctor Review"]).map(mapQueueToDoctorPatient);
+      setQueue((prev) => {
+        const existingIds = new Set(prev.map((p) => p.appointmentId));
+        const newPts = queuePts.filter((p) => !existingIds.has(p.appointmentId));
+        if (newPts.length === 0) return prev;
+        return [...newPts, ...prev];
+      });
+    };
+    window.addEventListener("focus", refreshPatients);
+    return () => window.removeEventListener("focus", refreshPatients);
+  }, []);
+
+  const handleTakeCase = (patient) => {
+    updateQueueStatus(patient.appointmentId, "In Consultation");
+    setQueue((prev) =>
+      prev.map((p) =>
+        p.appointmentId === patient.appointmentId
+          ? {
+              ...p,
+              status: "In Consultation",
+              statusStyles:
+                "bg-surface-container-high dark:bg-[#171717] text-on-surface-variant dark:text-gray-300 border border-outline-variant dark:border-[#333]",
+            }
+          : p,
+      ),
+    );
+    createNotification({
+      title: patient.status === "Urgent Ready" ? "Urgent Case Taken" : "Case Taken",
+      message: `You have taken up ${patient.complaint.toLowerCase()}`,
+      patientName: `${patient.name} (${patient.id})`,
+      type: patient.status === "Urgent Ready" ? "urgent" : "info",
+      appointmentId: patient.appointmentId,
+    });
+  };
 
   const filteredQueue = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
 
-    return queueData.filter((patient) => {
+    return queue.filter((patient) => {
       const matchesStatus =
         statusFilter === "All Patients" || patient.status === statusFilter;
 
@@ -68,33 +130,49 @@ export default function DoctorDashboard() {
         .toLowerCase()
         .includes(normalizedQuery);
     });
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, queue]);
 
   return (
     <div className="max-w-[1280px] mx-auto w-full">
-      {/* Page Header */}
       <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h2 className="font-headline-lg text-[24px] md:text-[32px] text-on-surface dark:text-white mb-1 font-semibold">
-            Doctor's Consultation Queue
+            Doctor&apos;s Consultation Queue
           </h2>
           <p className="font-body-lg text-body-lg text-on-surface-variant dark:text-gray-400">
             Review patients ready for consultation based on completed triage.
           </p>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <label className="relative block min-w-[240px]">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant dark:text-gray-400 pointer-events-none">
-              search
-            </span>
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search patients..."
-              className="h-9 w-full rounded-lg border border-outline-variant dark:border-[#262626] bg-surface-container-lowest dark:bg-[#0A0A0A] pl-10 pr-3 font-label-md text-label-md text-on-surface dark:text-gray-200 placeholder:text-on-surface-variant dark:placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 dark:focus:border-primary-fixed-dim dark:focus:ring-primary-fixed-dim/20"
-            />
-          </label>
+          <div className="relative">
+            <div className="flex items-center min-w-[240px]">
+              <span className="material-symbols-outlined absolute left-3 text-[20px] text-on-surface-variant dark:text-gray-400">
+                search
+              </span>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search patients..."
+                className={`h-9 w-full rounded-lg border ${searchQuery ? "border-primary dark:border-primary-fixed-dim" : "border-outline-variant dark:border-[#262626]"} bg-surface-container-lowest dark:bg-[#0A0A0A] pl-10 ${searchQuery ? "pr-16" : "pr-3"} font-label-md text-label-md text-on-surface dark:text-gray-200 placeholder:text-on-surface-variant dark:placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20 dark:focus:border-primary-fixed-dim dark:focus:ring-primary-fixed-dim/20 transition-all`}
+              />
+              {searchQuery ? (
+                <div className="absolute right-2 flex items-center gap-1">
+                  <span className="text-[11px] text-on-surface-variant dark:text-gray-500 bg-surface-container-lowest dark:bg-[#0A0A0A] px-1.5 py-0.5 rounded">
+                    {filteredQueue.length} hits
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="material-symbols-outlined text-[16px] text-on-surface-variant dark:text-gray-400 hover:text-error dark:hover:text-error transition-colors cursor-pointer"
+                    aria-label="Clear search"
+                  >
+                    close
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </div>
 
           <div className="relative flex items-center gap-3">
             <button
@@ -141,8 +219,20 @@ export default function DoctorDashboard() {
       </div>
 
       <div className="mb-4 flex items-center justify-between text-sm text-on-surface-variant dark:text-gray-400">
-        <span>
-          Showing {filteredQueue.length} of {queueData.length} patients
+        <span className="flex items-center gap-2">
+          {searchQuery ? (
+            <span className="flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[16px] text-primary dark:text-primary-fixed-dim">search</span>
+              <span>
+                <strong className="text-on-surface dark:text-gray-200">{filteredQueue.length}</strong> of{" "}
+                {queue.length} match &quot;{searchQuery}&quot;
+              </span>
+            </span>
+          ) : (
+            <span>
+              Showing {filteredQueue.length} of {queue.length} patients
+            </span>
+          )}
         </span>
         <div className="flex items-center gap-4">
           <button
@@ -158,7 +248,6 @@ export default function DoctorDashboard() {
         </div>
       </div>
 
-      {/* High-Density Data Table Card */}
       <div className="bg-surface-container-lowest dark:bg-[#0A0A0A] border border-outline-variant dark:border-[#262626] rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto w-full">
           <table className="w-full text-left border-collapse min-w-[800px]">
@@ -198,7 +287,7 @@ export default function DoctorDashboard() {
                             {patient.name}
                           </p>
                           <p className="text-xs text-on-surface-variant dark:text-gray-500">
-                            ID: {patient.id} • {patient.age}
+                            ID: {patient.id} {patient.age ? `• ${patient.age}` : ""}
                           </p>
                         </div>
                       </div>
@@ -217,13 +306,23 @@ export default function DoctorDashboard() {
                       </span>
                     </td>
                     <td className="py-4 px-4 text-right">
-                      <Link href={`/doctor/consult/${patient.appointmentId}`}>
-                        <button className="h-8 px-3 bg-primary text-on-primary rounded text-xs shadow-sm hover:opacity-90 transition-opacity bg-gradient-to-r from-primary to-blue-700">
-                          {patient.status === "In Consultation"
-                            ? "Resume"
-                            : "Open File"}
-                        </button>
-                      </Link>
+                      <div className="flex items-center justify-end gap-2">
+                        {(patient.status === "Ready" || patient.status === "Urgent Ready") && (
+                          <button
+                            onClick={() => handleTakeCase(patient)}
+                            className={`h-8 px-3 rounded text-xs font-bold shadow-sm hover:opacity-90 transition-opacity ${patient.status === "Urgent Ready" ? "bg-error text-on-error animate-pulse" : "bg-tertiary text-on-tertiary"}`}
+                          >
+                            Take Case
+                          </button>
+                        )}
+                        <Link href={`/doctor/consult/${patient.appointmentId}`}>
+                          <button className="h-8 px-3 bg-primary text-on-primary rounded text-xs shadow-sm hover:opacity-90 transition-opacity bg-gradient-to-r from-primary to-blue-700">
+                            {patient.status === "In Consultation"
+                              ? "Resume"
+                              : "Open File"}
+                          </button>
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))

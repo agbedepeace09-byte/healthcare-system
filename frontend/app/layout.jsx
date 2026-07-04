@@ -1,14 +1,11 @@
 // frontend/src/app/layout.jsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
-  LayoutDashboard,
   Users,
-  Calendar,
-  Package,
-  BarChart3,
   HelpCircle,
   LogOut,
   Sun,
@@ -22,6 +19,9 @@ import {
   Pill,
   Settings,
   FlaskConical,
+  AlertTriangle,
+  CheckCheck,
+  Trash2,
 } from "lucide-react";
 import "./globals.css";
 
@@ -33,9 +33,12 @@ import "@fontsource/inter/700.css";
 import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/material-symbols-outlined";
 
+import { loadNotifications, markAsRead, markAllAsRead, clearNotifications } from "./lib/notifications";
+
 export default function RootLayout({
   children,
 }) {
+  const router = useRouter();
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window === "undefined") {
       return false;
@@ -54,12 +57,42 @@ export default function RootLayout({
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifications, setNotifications] = useState(() => {
+    if (typeof window !== "undefined") {
+      try { return loadNotifications(); } catch {}
+    }
+    return [];
+  });
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef(null);
+
+  useEffect(() => {
+    const handler = () => setNotifications(loadNotifications());
+    window.addEventListener("juwon:notification", handler);
+    window.addEventListener("juwon:notification-update", handler);
+    return () => {
+      window.removeEventListener("juwon:notification", handler);
+      window.removeEventListener("juwon:notification-update", handler);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false);
+      }
+    };
+    if (notifOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [notifOpen]);
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", darkMode);
     document.documentElement.classList.toggle("light", !darkMode);
     window.localStorage.setItem("theme", darkMode ? "dark" : "light");
   }, [darkMode]);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <html lang="en" className="light" suppressHydrationWarning>
@@ -171,24 +204,32 @@ export default function RootLayout({
           {/* Bottom Utility Items */}
           <ul className="px-3 space-y-1 mt-auto pt-4 border-t border-[#c3c6d7] dark:border-[#737686]">
             <li>
-              <a
-                className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
-                href="#"
-                onClick={() => setSidebarOpen(false)}
+              <button
+                onClick={() => {
+                  setSidebarOpen(false);
+                  window.open("https://opencode.ai", "_blank", "noopener,noreferrer");
+                }}
+                className="flex items-center gap-3 px-3 py-2 w-full text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
               >
                 <HelpCircle size={18} />
                 <span>Help Center</span>
-              </a>
+              </button>
             </li>
             <li>
-              <Link
-                className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
-                href="/login"
-                onClick={() => setSidebarOpen(false)}
+              <button
+                onClick={() => {
+                  setSidebarOpen(false);
+                  if (typeof window !== "undefined") {
+                    const keys = Object.keys(localStorage).filter((k) => k.startsWith("juwon:"));
+                    keys.forEach((k) => localStorage.removeItem(k));
+                  }
+                  router.push("/");
+                }}
+                className="flex items-center gap-3 px-3 py-2 w-full text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
               >
                 <LogOut size={18} />
                 <span>Logout</span>
-              </Link>
+              </button>
             </li>
           </ul>
         </nav>
@@ -220,10 +261,70 @@ export default function RootLayout({
                 {darkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
 
-              <button className="text-[#434655] dark:text-[#bec6e0] transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#eff4ff] dark:hover:bg-[#213145] relative">
-                <Bell size={18} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#ba1a1a] rounded-full border-2 border-white dark:border-[#0a0a0a]"></span>
-              </button>
+              <div className="relative" ref={notifRef}>
+                <button
+                  onClick={() => setNotifOpen(!notifOpen)}
+                  className="text-[#434655] dark:text-[#bec6e0] transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#eff4ff] dark:hover:bg-[#213145] relative"
+                >
+                  <Bell size={18} />
+                  {unreadCount > 0 ? (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#ba1a1a] text-white text-[10px] font-bold leading-none px-1 border-2 border-white dark:border-[#0a0a0a]">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  ) : null}
+                </button>
+
+                {notifOpen && (
+                  <div className="absolute right-0 top-10 w-80 md:w-96 rounded-xl border border-outline-variant dark:border-[#262626] bg-surface-container-lowest dark:bg-[#0a0a0a] shadow-2xl z-50 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-outline-variant dark:border-[#262626]">
+                      <h3 className="font-label-lg text-label-lg text-on-surface dark:text-inverse-on-surface">Notifications</h3>
+                      <div className="flex gap-1">
+                        {unreadCount > 0 && (
+                          <button onClick={() => { markAllAsRead(); }} className="text-xs text-primary hover:underline px-2 py-1" title="Mark all as read">
+                            <CheckCheck size={16} />
+                          </button>
+                        )}
+                        {notifications.length > 0 && (
+                          <button onClick={() => { clearNotifications(); }} className="text-xs text-on-surface-variant hover:text-on-surface dark:hover:text-inverse-on-surface px-2 py-1" title="Clear all">
+                            <Trash2 size={16} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="px-4 py-8 text-center text-body-md text-on-surface-variant dark:text-secondary-fixed-dim">
+                          No notifications yet
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div
+                            key={n.id}
+                            onClick={() => { markAsRead(n.id); }}
+                            className={`px-4 py-3 border-b border-outline-variant/50 dark:border-[#262626]/50 cursor-pointer transition-colors hover:bg-surface-container-low dark:hover:bg-[#171717] ${n.read ? "opacity-60" : ""}`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={`mt-0.5 w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${n.type === "urgent" ? "bg-error-container text-on-error-container" : "bg-primary-container text-on-primary-container"}`}>
+                                {n.type === "urgent" ? <AlertTriangle size={16} /> : <Bell size={16} />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2">
+                                  <p className={`font-label-md text-label-md truncate ${n.type === "urgent" ? "text-error" : "text-on-surface dark:text-inverse-on-surface"}`}>
+                                    {n.title}
+                                  </p>
+                                  <span className="text-[10px] text-on-surface-variant dark:text-secondary-fixed-dim shrink-0">{n.time}</span>
+                                </div>
+                                <p className="font-body-sm text-body-sm text-on-surface-variant dark:text-secondary-fixed-dim mt-0.5 line-clamp-2">{n.message}</p>
+                                <p className="font-label-sm text-label-sm text-primary dark:text-primary-fixed-dim mt-0.5">{n.patientName}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </header>
 

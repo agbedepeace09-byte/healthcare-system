@@ -57,14 +57,46 @@ export const patientRecords = [
 
 const VITALS_STORAGE_PREFIX = "juwon:patient-vitals:";
 
+function mapQueueToPatientRecord(qp) {
+  return {
+    appointmentId: qp.appointmentId,
+    id: qp.patientId,
+    name: qp.name,
+    initials: qp.initials || "",
+    age: "",
+    ageLabel: "",
+    bloodType: "",
+    gender: qp.gender || "",
+    dob: qp.dob || "",
+    timeWaiting: "",
+    waitingSeverity: qp.waitingSeverity || "low",
+    assignedDoctor: qp.assignedDoctor || "",
+    complaint: qp.complaint || "",
+    status: qp.status,
+    statusStyles: "",
+  };
+}
+
 export function getPatientByAppointmentId(appointmentId) {
   if (!appointmentId) {
     return null;
   }
 
-  return patientRecords.find(
+  const fromRecords = patientRecords.find(
     (patient) => patient.appointmentId === String(appointmentId),
   );
+
+  if (fromRecords) return fromRecords;
+
+  if (typeof window !== "undefined") {
+    try {
+      const all = JSON.parse(localStorage.getItem("juwon:patient-queue") || "[]");
+      const qp = all.find((p) => p.appointmentId === String(appointmentId));
+      if (qp) return mapQueueToPatientRecord(qp);
+    } catch {}
+  }
+
+  return null;
 }
 
 export function getVitalsStorageKey(appointmentId) {

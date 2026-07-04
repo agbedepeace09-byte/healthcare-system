@@ -4,28 +4,29 @@ LOGIN PAGE
 this looks good, the dropdown button is working but the login button itself doesnt have the database to confirm authentication
 
 DOCTOR'S DASHBOARD
-1. the filter button is static
-2. the seaarch bar is still static tho i can input name but i cant search
-3. THE OPENB FILE PAGE IS WORKING 
+1. the filter button is static[done]
+2. the seaarch bar is still static tho i can input name but i cant search[done]
+3. THE OPEN FILE PAGE IS now WORKING [done]
 4. THE ADD BUTTON IN THE HISTORY SECTION IS NOT WORKING
 5.ATTACH BUTTON IS NOT WORKING 
-6. repitition of text words(i.e attach_file attach)
-7. How do we fit in the resource allocation
+6. repitition of text words(i.e attach_file attach)[done]
+7. How do we fit in the resource allocation[done]
 NURSE DASHBOARD 
-1. THE CAPTURE BUTTON IS STATIC 
-2. FILTER QUEUE BUTTON IS STATIC 
+1. THE CAPTURE BUTTON IS STATIC[done]
+2. FILTER QUEUE BUTTON IS STATIC [done]
 
 receptionist
-1. the filter, checkup, back, and action button are not working
+1. the filter, checkup, back, and action button are not working[done]
 
 REGISTER PATIENT 
-1. THEY ARE ALL WORKING EXCEPT THE VIEW PATIENTS BUTTON AND CANCEL
+1. THEY ARE ALL WORKING EXCEPT THE VIEW PATIENTS BUTTON AND CANCEL[done]
 
-HELP CANTER AND LOGOUT PAGE ISSUE
+HELP center AND LOGOUT PAGE ISSUE[done]
 
 LAB
-view full inventory is not working 
-action buttons are not working
+view full inventory is not working [done]
+action buttons are not working[done]
 
 ADMIN 
-1.All buttons are static 
+1.All buttons are static [done]
+in the admin dashboard when a user clicks the dashboard (i.e total staffs, or active staff),it should be able to work by showing you the filtered sectiom or something[done]
