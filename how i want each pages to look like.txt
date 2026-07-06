@@ -1,0 +1,164 @@
+thinking off a way to make it work locally so if there is no network it will still function.
+
+
+DOCTORS VIEW
+1. history of patient attended to; there should be a button for filter and also a search bar
+2. patient age should and primary details shopuld always appear at each patient card(i.e name, if student or staff, check in time should be in real time, allergies etc)
+3. prescription and plan should have a button for for sending to the pharmacist before saving case and concluding encounter
+4. appointment should come in fifo
+5. vital should be shown on the card ridht from the waiting time in the appointment queue because the nurse has has done and recorded it[done]
+6. our spoace for the support system\chatbot 
+7. chat space where a doctor can communicate
+8. for the prescription i want it to be in a drop down where doctor picks a drug from the available drugs in the pharmacist inventory so he doesnt prescribe a drug thats not available 
+9.  i want the doctor to pick drugs from a pre defined listy rather than a blank space for prescription alone
+10. if the doctor admits a patient the system should automatically assign a nurse, drip stand, and a bed with other resources to the patient...this details should also be sent to the nurse and the system should automatically thick this space taken
+11.
+
+NURSE VIEW
+1. input vitals[done]
+2. push button to take a patients case up also sending a red notificatrion signal to the doctor if the case is urgent or  emergency[done]
+3. the nurse should converse to the doctor alone[done]
+4. communication on admitted patients with the doctor should be available[done]
+
+
+ADMIN VIEW 
+1. only an admin can create accounts and reset passwords[done]
+2. the admin should be able to spool out data[done]
+3. admin can get and send result in downloadable file format[done]
+4. inside the admin page where there is view analytics i want it to have a session for predicted analysis based on trends in the last 7 dAYS[done]
+5. in the manage staff the admin should be able to disable or suspend a user account [done]
+6. info like total staff, registered patients, staffs avaialble on duty[done]
+MAIN PAGE
+
+
+general update
+1. each users sould be able to reset their passwords[cancelled]
+2. when an inventory is created a table should automatically be created in the db (if the pharmacist create drug paracetamol it should automatically create a table in the db for it)
+3. the age should be the current date minus the date of birth
+4. chat space where all users can communicate with each other(a doctor can send a clinical note to the nurse specifying what injection and dose to give the patient even without closing the file) there should be a drop down on who he wants to send the message to
+5. general space to see each message sent in
+6. if a patient's diagnosis or prescription changes, the system needs to know exactly who did it and when
+7. Instead of users clicking around to find updates, the system pushes updates to them the millisecond they happen.
+How it works: When the Lab Technician clicks "Submit Results," a PostgreSQL trigger in Supabase detects the new row. This instantly fires an event through a WebSocket connection to your React frontend, making a notification pop up on the specific Doctor’s screen saying, "Lab Results Ready for Patient X," without the doctor ever refreshing the page.
+8. When a doctor prescribes "500mg Amoxicillin," the system doesn't just record it for the patient. Your Node.js backend intercepts the action and automatically deducts it from the pharmacy_inventory table. If the stock drops below a certain threshold (e.g., fewer than 50 pills left), the backend generates an automated "Low Stock Warning" on the Admin and Pharmacist dashboards.
+9. except the admin each user should communicate to the doctor alone and can only communicate to the admin when in need of a report 
+10. only admins can access informations in archieve
+11. in situations where by a patient is admitted his file should not be closed and when pushed to the nurse he/she should be able to give the doctor update  
+
+
+laboratory
+
+PHARMACIST
+
+
+so here is the workflow of the system
+when a patient enters the system for the first time the receptionist registers the new patient but if the patient is an existing patient the receptionist ask for the patient id or name which checks the patient into the system and appears on the active waiting list under the nurse triage. once it gets to the patient turn the nurse calls the patient up to take vitals of the patient and then the patient goes back to the receptionist which will then be assigned to a doctor. once the patient gets to the doctor he confirms your name and then open your file. the doctor sees your already recorded vitals from  the nurse and document your symptoms which if needed might have to refer you to the lab for a test. when the patient gets to the lab, the laboratorist ask for id and then take the necessary test asked from the doctor before sending the result back to the doctor. if the patient doesnt need the test then there would be need to go to the lab. after that the doctor makes clinical diagnosis and then makes prescription before sending to the pharmacist who dispenses the drugs to the patient.  note if after the doctors diagnosis the patients needs to be admitted he selects admit patient else he close the case.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1. System Actors (Role-Based Access)
+Receptionist: Handles registration, check-ins, and assigning patients to doctors.
+
+Nurse: Handles triage and records vitals.
+
+Doctor: Reviews vitals, documents symptoms, requests labs, makes diagnoses, and prescribes medication/admission.
+
+Laboratorist: Processes lab test requests and uploads results.
+
+Pharmacist: Dispenses prescribed medications.
+
+2. Patient Workflow & System States
+Phase 1: Registration & Check-in (Receptionist)
+
+Condition A (New Patient): Receptionist captures patient details and creates a new Patient Profile.
+
+Condition B (Existing Patient): Receptionist searches via Patient ID or Name.
+
+Action: Patient is checked into the system.
+
+State Change: Patient status changes to Waiting for Triage and appears on the Nurse's Active Waiting List.
+
+Phase 2: Triage (Nurse)
+
+Action: Nurse selects patient from the waiting list, takes vitals (BP, temp, weight, etc.), and saves the data to the patient's current visit record.
+
+State Change: Patient status changes to Waiting for Doctor Assignment. (Patient is routed back to the Receptionist queue).
+
+Action: Receptionist assigns the patient to a specific, available Doctor.
+
+Phase 3: Initial Consultation (Doctor)
+
+Action: Doctor verifies patient identity, opens the Patient File, and reviews the nurse's recorded vitals.
+
+Action: Doctor documents patient Symptoms.
+
+Decision Point: Does the patient need lab tests?
+
+If YES: Doctor creates a Lab Request. State changes to Waiting for Lab.
+
+If NO: Skip Phase 4 and proceed directly to Phase 5.
+
+Phase 4: Laboratory (Laboratorist) - Conditional
+
+Action: Laboratorist verifies patient via Patient ID.
+
+Action: Laboratorist conducts requested tests and inputs the Lab Results into the system.
+
+State Change: Results are sent back to the Doctor. Patient state changes to Waiting for Doctor Review.
+
+Phase 5: Diagnosis & Prescription (Doctor)
+
+Action: Doctor reviews lab results (if applicable), makes a Clinical Diagnosis, and generates a Prescription.
+
+Decision Point: Does the patient need to be admitted?
+
+If YES: Doctor selects Admit Patient. State changes to Admitted. (Case stays open/transfers to inpatient ward).
+
+If NO: Doctor finalizes the visit. State changes to Waiting for Pharmacy.
+
+Phase 6: Pharmacy (Pharmacist) - Conditional
+
+Action: Pharmacist accesses the patient's Prescription via the system.
+
+Action: Pharmacist dispenses the drugs.
+
+State Change: Visit is marked as Closed / Completed.
