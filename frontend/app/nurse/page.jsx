@@ -63,54 +63,60 @@ export default function NurseTriageDashboard() {
 
       {/* Queue List */}
       <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-        {mockQueue.map((patient) => (
-          <div
-            key={patient.id}
-            onClick={() => setSelectedVisit(patient)}
-            className={`bg-white rounded-xl border transition-all cursor-pointer p-4 flex flex-col gap-2.5 group
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 
+      gap-3"
+        >
+          {" "}
+          {mockQueue.map((patient) => (
+            <div
+              key={patient.id}
+              onClick={() => setSelectedVisit(patient)}
+              className={`bg-white rounded-xl border transition-all cursor-pointer p-4 flex flex-col gap-2.5 group
               ${
                 selectedVisit?.id === patient.id
                   ? "border-indigo-600 shadow-md ring-1 ring-indigo-600/20"
                   : "border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300"
               }
             `}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-indigo-600 font-mono font-bold text-sm">
-                {patient.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center text-indigo-600 font-mono font-bold text-sm">
+                  {patient.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")}
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-slate-900">
+                    {patient.name}
+                  </h3>
+                  <p className="font-mono text-xs text-slate-500 mt-0.5">
+                    {patient.matric}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-sm font-medium text-slate-900">
-                  {patient.name}
-                </h3>
-                <p className="font-mono text-xs text-slate-500 mt-0.5">
-                  {patient.matric}
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-center gap-6">
-              <div className="text-right hidden sm:block">
-                <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-0.5">
-                  Checked In
-                </p>
-                <p className="font-mono text-xs text-slate-900">
-                  {patient.timeIn}
-                </p>
+              <div className="flex items-center gap-6">
+                <div className="text-right hidden sm:block">
+                  <p className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-0.5">
+                    Checked In
+                  </p>
+                  <p className="font-mono text-xs text-slate-900">
+                    {patient.timeIn}
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-slate-600 bg-slate-50 py-1 px-2.5 rounded border border-slate-200">
+                  <Clock className="w-3 h-3 text-slate-400" />
+                  Wait: {patient.waitTime}
+                </span>
+                <ChevronRight
+                  className={`w-5 h-5 transition-colors ml-auto  ${selectedVisit?.id === patient.id ? "text-indigo-600" : "text-slate-300 group-hover:text-indigo-400"}`}
+                />
               </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-mono text-slate-600 bg-slate-50 py-1 px-2.5 rounded border border-slate-200">
-                <Clock className="w-3 h-3 text-slate-400" />
-                Wait: {patient.waitTime}
-              </span>
-              <ChevronRight
-                className={`w-5 h-5 transition-colors ml-auto  ${selectedVisit?.id === patient.id ? "text-indigo-600" : "text-slate-300 group-hover:text-indigo-400"}`}
-              />
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
 
         {mockQueue.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
@@ -313,7 +319,7 @@ export default function NurseTriageDashboard() {
                       Triage Notes (Optional)
                     </label>
                     <textarea
-                      rows="4"
+                      rows="6"
                       placeholder="Brief observations..."
                       className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-xs md:text-sm text-slate-900 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 outline-none transition-all resize-none"
                     ></textarea>

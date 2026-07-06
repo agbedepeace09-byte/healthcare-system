@@ -208,7 +208,7 @@ export default function ReceptionDashboard() {
           />
           <div className="bg-white w-full max-w-md rounded-xl shadow-xl border border-slate-200 relative z-10 flex flex-col">
             <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-slate-900">
+              <h2 className="text-sm font-mono font-semibold text-slate-900">
                 Register New Patient
               </h2>
               <button
@@ -222,51 +222,51 @@ export default function ReceptionDashboard() {
             <div className="p-6 overflow-y-auto">
               <form className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 font-mono">
                     Matriculation Number
                   </label>
                   <input
                     type="text"
                     placeholder="e.g. MCU/24/0001"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 font-mono"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 font-mono"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 font-mono">
                     Full Name
                   </label>
                   <input
                     type="text"
                     placeholder="Last Name, First Name"
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
                   />
                 </div>
                 <div className="flex gap-4">
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1 font-mono">
                       Gender
                     </label>
-                    <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 bg-white">
+                    <select className="w-full px-3 py-2 border border-slate-200 rounded-lg md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 bg-white text-xs ">
                       <option value="">Select...</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                     </select>
                   </div>
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                    <label className="block text-xs font-mono md:text-sm font-medium text-slate-700 mb-1">
                       Date of Birth
                     </label>
                     <input
                       type="date"
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg  focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 text-xs md:text-sm"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-xs font-mono md:text-sm font-medium text-slate-700 mb-1">
                     Department
                   </label>
-                  <select className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 bg-white">
+                  <select className="w-full px-3 py-2 border border-slate-200 rounded-lg md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 bg-white text-xs">
                     <option value="">Select College...</option>
                     <option value="COLNAS">COLNAS</option>
                     <option value="COLHUM">COLHUM</option>
@@ -279,11 +279,11 @@ export default function ReceptionDashboard() {
             <div className="px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-xl flex justify-end gap-2">
               <button
                 onClick={() => setIsRegisterOpen(false)}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-200 transition-colors"
+                className="px-4 py-2 rounded-lg text-xs md:text-sm font-mono font-medium text-slate-600 hover:bg-slate-200 transition-colors"
               >
                 Cancel
               </button>
-              <button className="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm">
+              <button className="px-4 py-2 rounded-lg text-xs md:text-sm font-mono font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm">
                 Save & Register
               </button>
             </div>

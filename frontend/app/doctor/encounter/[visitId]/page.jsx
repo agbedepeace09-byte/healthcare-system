@@ -227,7 +227,7 @@ export default function MedicalEncounter() {
                 <textarea
                   rows="6"
                   placeholder="Detail patient presentation, chief complaints, and physical examination findings here..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs md:text-sm text-slate-900 focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all resize-y"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs md:text-sm text-slate-900 focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all resize-none"
                 ></textarea>
               </div>
 
@@ -240,7 +240,7 @@ export default function MedicalEncounter() {
                 <textarea
                   rows="6"
                   placeholder="Enter clinical assessment, differential diagnosis..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs md:text-sm text-slate-900 focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all resize-y"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs md:text-sm text-slate-900 focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all resize-none"
                 ></textarea>
               </div>
 
@@ -250,14 +250,14 @@ export default function MedicalEncounter() {
                   <div className="flex min-w-0 items-center gap-2">
                     <ScanText className="w-5 h-5 text-indigo-600" />
                     <h3 className="text-xs md:text-sm font-mono font-medium text-slate-900">
-                      Entity Extraction
+                      AI Health Assistant
                     </h3>
                   </div>
                   <button
                     onClick={handleExtraction}
                     className="inline-flex w-full items-center justify-center gap-2 rounded-md border border-indigo-200 bg-white px-3 py-2 text-[11px] md:text-xs font-mono font-medium text-indigo-600 shadow-sm transition-colors hover:bg-indigo-50 sm:w-auto sm:py-1.5"
                   >
-                    Extract Entities
+                    Run Model
                   </button>
                 </div>
 
