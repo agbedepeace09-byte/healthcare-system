@@ -1,6 +1,8 @@
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
+
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -19,6 +21,24 @@ enum Role {
   ADMIN
 }
 
+// The core state machine for the queues
+enum VisitStatus {
+  WAITING_TRIAGE        // In Reception waiting for Nurse
+  WAITING_CONSULTATION  // Vitals taken, waiting for Doctor
+  IN_CONSULTATION       // Currently with Doctor
+  AT_LAB                // Sent to Lab
+  WAITING_LAB_REVIEW    // Lab done, waiting for Doctor to review results
+  AT_PHARMACY           // Sent to Pharmacy
+  DISCHARGED            // Visit complete
+  CANCELLED             // Patient left or cancelled
+}
+
+enum UrgencyLevel {
+  ROUTINE
+  URGENT
+  EMERGENCY
+}
+
 enum RequestStatus {
   PENDING
   IN_PROGRESS
@@ -31,96 +51,156 @@ enum RequestStatus {
 // ==========================================
 
 model Staff {
-  id        Int      @id @default(autoincrement())
-  staffId   String   @unique @map("staff_id")
-  firstName String   @map("first_name")
-  lastName  String   @map("last_name")
-  email     String   @unique
-  role      Role
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id           Int      @id @default(autoincrement())
+  staffId      String   @unique @map("staff_id")
+  firstName    String   @map("first_name")
+  lastName     String   @map("last_name")
+  email        String   @unique
+  passwordHash String   @map("password_hash") // Added here for authentication
+  role         Role
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   // Relations
-  appointments  Appointment[]
-  prescriptions Prescription[]
-  labRequests   LabRequest[]   @relation("OrderingDoctor")
+  visitsHandled  Visit[]          @relation("DoctorVisits")
+  vitalsRecorded Vitals[]         @relation("NurseVitals")
+  clinicalNotes  ClinicalNote[]
+  labRequests    LabRequest[]     @relation("OrderingDoctor")
+  labFulfilled   LabRequest[]     @relation("FulfillingLabTech")
+  prescriptions  Prescription[]   @relation("PrescribingDoctor")
+  prescDispensed Prescription[]   @relation("DispensingPharmacist")
 
   @@map("staff")
 }
 
 model Patient {
   id            Int      @id @default(autoincrement())
-  patientId     String   @unique @map("patient_id")
+  matricNumber  String   @unique @map("matric_number") // Primary identifier for the ecosystem
   firstName     String   @map("first_name")
   lastName      String   @map("last_name")
   dateOfBirth   DateTime @map("date_of_birth")
   gender        String
   contactNumber String?  @map("contact_number")
-  studentId     String?  @unique @map("student_id")
+  department    String?  
+  level         Int?
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   // Relations
-  appointments  Appointment[]
-  labRequests   LabRequest[]
-  prescriptions Prescription[]
+  visits        Visit[]
+  vitalsHistory Vitals[]
+  clinicalNotes ClinicalNote[]
 
   @@map("patients")
 }
 
-model Appointment {
-  id              Int           @id @default(autoincrement())
-  appointmentId   String        @unique @map("appointment_id")
-  patientId       Int           @map("patient_id")
-  doctorId        Int           @map("doctor_id")
-  appointmentDate DateTime      @map("appointment_date")
-  reason          String
-  status          RequestStatus @default(PENDING)
-  notes           String?
-  createdAt       DateTime      @default(now()) @map("created_at")
-  updatedAt       DateTime      @updatedAt @map("updated_at")
+// The Visit model is the heart of the queue system. 
+// Every time a student walks in, a new Visit is created.
+model Visit {
+  id            Int          @id @default(autoincrement())
+  visitId       String       @unique @map("visit_id")
+  patientId     Int          @map("patient_id")
+  doctorId      Int?         @map("doctor_id") // Assigned when doctor accepts patient
+  
+  status        VisitStatus  @default(WAITING_TRIAGE)
+  urgency       UrgencyLevel @default(ROUTINE) // Set by nurse
+  
+  checkInTime   DateTime     @default(now()) @map("check_in_time")
+  dischargeTime DateTime?    @map("discharge_time")
 
   // Relations
-  patient Patient @relation(fields: [patientId], references: [id])
-  doctor  Staff   @relation(fields: [doctorId], references: [id])
+  patient       Patient        @relation(fields: [patientId], references: [id])
+  doctor        Staff?         @relation("DoctorVisits", fields: [doctorId], references: [id])
+  vitals        Vitals?        // One-to-one for this specific visit
+  notes         ClinicalNote[]
+  labRequests   LabRequest[]
+  prescriptions Prescription[]
 
-  @@map("appointments")
+  @@map("visits")
+}
+
+model Vitals {
+  id          Int      @id @default(autoincrement())
+  visitId     Int      @unique @map("visit_id")
+  patientId   Int      @map("patient_id")
+  recordedBy  Int      @map("recorded_by") // The Nurse
+  
+  temperature Float?
+  bloodPress  String?  @map("blood_pressure") // e.g., "120/80"
+  pulseRate   Int?     @map("pulse_rate")
+  weight      Float?
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  visit       Visit   @relation(fields: [visitId], references: [id])
+  patient     Patient @relation(fields: [patientId], references: [id])
+  nurse       Staff   @relation("NurseVitals", fields: [recordedBy], references: [id])
+
+  @@map("vitals")
+}
+
+// Dedicated space for Doctor's history and the AI integration opening
+model ClinicalNote {
+  id          Int      @id @default(autoincrement())
+  visitId     Int      @map("visit_id")
+  patientId   Int      @map("patient_id")
+  doctorId    Int      @map("doctor_id")
+  
+  symptoms    String   @db.Text
+  diagnosis   String?  @db.Text
+  aiSummary   String?  @db.Text @map("ai_summary") // Perfect target for rule-based extraction or summaries
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  visit       Visit   @relation(fields: [visitId], references: [id])
+  patient     Patient @relation(fields: [patientId], references: [id])
+  doctor      Staff   @relation(fields: [doctorId], references: [id])
+
+  @@map("clinical_notes")
 }
 
 model LabRequest {
   id              Int           @id @default(autoincrement())
-  requestId       String        @unique @map("request_id")
-  patientId       Int           @map("patient_id")
-  doctorId        Int           @map("doctor_id")
+  visitId         Int           @map("visit_id")
+  orderingDocId   Int           @map("ordering_doc_id")
+  labTechId       Int?          @map("lab_tech_id") // Assigned when lab picks it up
+  
   testType        String        @map("test_type")
   status          RequestStatus @default(PENDING)
-  technicianNotes String?       @map("technician_notes")
-  resultFileUrl   String?       @map("result_file_url")
+  results         String?       @db.Text // Text results
+  resultFileUrl   String?       @map("result_file_url") // Uploaded PDF/Images
+  
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  patient        Patient @relation(fields: [patientId], references: [id])
-  orderingDoctor Staff   @relation("OrderingDoctor", fields: [doctorId], references: [id])
+  visit           Visit @relation(fields: [visitId], references: [id])
+  orderingDoctor  Staff @relation("OrderingDoctor", fields: [orderingDocId], references: [id])
+  labTech         Staff? @relation("FulfillingLabTech", fields: [labTechId], references: [id])
 
   @@map("lab_requests")
 }
 
 model Prescription {
-  id             Int           @id @default(autoincrement())
-  prescriptionId String        @unique @map("prescription_id")
-  patientId      Int           @map("patient_id")
-  doctorId       Int           @map("doctor_id")
-  medicationName String        @map("medication_name")
-  dosage         String
-  instructions   String
-  status         RequestStatus @default(PENDING)
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
+  id              Int           @id @default(autoincrement())
+  visitId         Int           @map("visit_id")
+  prescribingDoc  Int           @map("prescribing_doc")
+  pharmacistId    Int?          @map("pharmacist_id")
+  
+  medicationName  String        @map("medication_name")
+  dosage          String
+  instructions    String
+  status          RequestStatus @default(PENDING)
+  
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  patient Patient @relation(fields: [patientId], references: [id])
-  doctor  Staff   @relation(fields: [doctorId], references: [id])
+  visit           Visit  @relation(fields: [visitId], references: [id])
+  doctor          Staff  @relation("PrescribingDoctor", fields: [prescribingDoc], references: [id])
+  pharmacist      Staff? @relation("DispensingPharmacist", fields: [pharmacistId], references: [id])
 
   @@map("prescriptions")
 }

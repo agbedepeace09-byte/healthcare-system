@@ -1,232 +1,207 @@
 "use client";
 
-import {
-  ArrowRight,
-  Bell,
-  CalendarDays,
-  ClipboardList,
-  LayoutDashboard,
-  PackagePlus,
-  Search,
-  Settings,
-  Users,
-} from "lucide-react";
+import { useState } from "react";
+import { Pill, Clock, CheckCircle2, Check } from "lucide-react";
 
-const queueRows = [
-  {
-    name: "Eleanor Vance",
-    drug: "Lisinopril",
-    dosage: "10mg, QD",
-    doctor: "Dr. J. Montague",
-    priority: false,
-  },
-  {
-    name: "Theodora Crain",
-    drug: "Sertraline",
-    dosage: "50mg, QD",
-    doctor: "Dr. J. Montague",
-    priority: false,
-  },
-  {
-    name: "Luke Crain",
-    drug: "Atorvastatin",
-    dosage: "20mg, QHS",
-    doctor: "Dr. H. Dudley",
-    priority: false,
-  },
-  {
-    name: "Shirley Crain",
-    drug: "Amoxicillin",
-    dosage: "500mg, TID",
-    doctor: "Dr. H. Dudley",
-    priority: false,
-  },
-  {
-    name: "Steven Crain",
-    drug: "Metformin",
-    dosage: "1000mg, BID",
-    doctor: "Dr. J. Montague",
-    priority: true,
-  },
-];
+export default function PharmacyDashboard() {
+  // Mock data representing GET /api/v1/pharmacy/queue
+  const mockPharmacyQueue = [
+    {
+      id: 1,
+      visitId: "VST-801",
+      name: "Sarah Jenkins",
+      matric: "MCU/24/0812",
+      waitTime: "12m",
+      urgency: "ROUTINE",
+      medications: [
+        {
+          id: "m1",
+          name: "Amoxicillin 500mg",
+          instructions: "Take 1 capsule three times daily for 7 days.",
+        },
+        {
+          id: "m2",
+          name: "Ibuprofen 400mg",
+          instructions: "Take 1 tablet every 6 hours as needed for pain.",
+        },
+      ],
+    },
+    {
+      id: 2,
+      visitId: "VST-804",
+      name: "Marcus Thorne",
+      matric: "MCU/21/1193",
+      waitTime: "28m",
+      urgency: "EMERGENCY",
+      medications: [
+        {
+          id: "m3",
+          name: "Lisinopril 10mg",
+          instructions: "Take 1 tablet daily in the morning.",
+        },
+      ],
+    },
+    {
+      id: 3,
+      visitId: "VST-806",
+      name: "Elena Rodriguez",
+      matric: "MCU/24/0042",
+      waitTime: "5m",
+      urgency: "URGENT",
+      medications: [
+        {
+          id: "m4",
+          name: "Salbutamol Inhaler 100mcg",
+          instructions:
+            "Inhale 2 puffs every 4-6 hours as needed for wheezing.",
+        },
+        {
+          id: "m5",
+          name: "Prednisolone 5mg",
+          instructions: "Take 8 tablets daily for 5 days.",
+        },
+      ],
+    },
+  ];
 
-const inventoryRows = [
-  {
-    drug: "Amoxicillin",
-    category: "Antibiotic",
-    stock: "142",
-    critical: false,
-  },
-  {
-    drug: "Lisinopril",
-    category: "ACE Inhibitor",
-    stock: "12",
-    critical: true,
-  },
-  { drug: "Sertraline", category: "SSRI", stock: "87", critical: false },
-  { drug: "Metformin", category: "Anti-diabetic", stock: "08", critical: true },
-  { drug: "Atorvastatin", category: "Statin", stock: "215", critical: false },
-];
-
-function QueueRow({ row }) {
   return (
-    <tr
-      className={`group transition-colors hover:bg-surface-container-low ${row.priority ? "bg-error-container/10" : ""}`}
-    >
-      <td className="px-4 py-3 font-medium text-on-surface">{row.name}</td>
-      <td className="px-4 py-3 font-code-sm text-code-sm text-on-surface">
-        {row.drug}
-      </td>
-      <td className="px-4 py-3 text-on-surface-variant">{row.dosage}</td>
-      <td className="px-4 py-3 text-on-surface-variant">{row.doctor}</td>
-      <td className="px-4 py-3 text-right">
-        <button
-          type="button"
-          className="rounded bg-primary-container px-3 py-1.5 text-label-md text-on-primary-container shadow-sm transition-colors hover:bg-primary hover:text-on-primary"
-        >
-          Mark Dispensed
-        </button>
-      </td>
-    </tr>
-  );
-}
-
-function InventoryRow({ row }) {
-  return (
-    <tr
-      className={`transition-colors hover:bg-surface-container-low ${row.critical ? "bg-error-container/10" : ""}`}
-    >
-      <td
-        className={`px-4 py-2 font-medium ${row.critical ? "text-error" : "text-on-surface"}`}
-      >
-        {row.drug}
-      </td>
-      <td className="px-4 py-2 text-[12px] text-on-surface-variant">
-        {row.category}
-      </td>
-      <td className="px-4 py-2 text-right">
-        <span
-          className={`inline-flex items-center justify-center rounded-full px-2 py-0.5 font-code-sm text-code-sm ${row.critical ? "bg-error text-on-error shadow-sm" : "border border-outline-variant/50 bg-surface-container-highest text-on-surface"}`}
-        >
-          {row.stock}
-        </span>
-      </td>
-    </tr>
-  );
-}
-
-export default function PharmacyPage() {
-  return (
-    <div className="max-w-7xl mx-auto p-8 space-y-8">
-      <section className="flex items-end justify-between gap-4">
+    <div className="w-full max-w-7xl mx-auto space-y-6 flex flex-col lg:h-[calc(100vh-120px)]">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 shrink-0">
         <div>
-          <h2 className="text-headline-lg tracking-tight text-on-surface">
-            Pharmacy Dashboard
-          </h2>
-          <p className="mt-1 text-body-md text-on-surface-variant">
-            Real-time overview of prescriptions and inventory status.
+          <h1 className="text-xl font-mono font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            Dispensing Queue
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Patients currently waiting at pharmacy.
           </p>
         </div>
-        <button
-          type="button"
-          className="rounded border border-outline-variant bg-surface-container-lowest px-4 py-2 text-label-md text-on-surface shadow-sm transition-colors hover:bg-surface-container-low"
-        >
-          Export Report
-        </button>
-      </section>
-
-      <section className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 flex flex-col gap-4 lg:col-span-8">
-          <div className="overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest shadow-soft">
-            <div className="flex items-center justify-between border-b border-outline-variant bg-surface-bright px-4 py-4">
-              <h3 className="flex items-center gap-2 text-title-lg text-on-surface">
-                <span className="material-symbols-outlined text-[20px] text-primary">
-                  receipt_long
-                </span>
-                Prescription Queue
-              </h3>
-              <span className="rounded bg-primary-container px-2 py-0.5 text-code-sm font-code-sm text-on-primary-container">
-                14 Pending
-              </span>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b border-outline-variant bg-surface-container-low">
-                    <th className="px-4 py-3 text-label-md uppercase text-on-surface-variant">
-                      Patient Name
-                    </th>
-                    <th className="px-4 py-3 text-label-md uppercase text-on-surface-variant">
-                      Drug
-                    </th>
-                    <th className="px-4 py-3 text-label-md uppercase text-on-surface-variant">
-                      Dosage
-                    </th>
-                    <th className="px-4 py-3 text-label-md uppercase text-on-surface-variant">
-                      Ordering Doctor
-                    </th>
-                    <th className="px-4 py-3 text-right text-label-md uppercase text-on-surface-variant">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/50 text-body-md text-on-surface">
-                  {queueRows.map((row) => (
-                    <QueueRow key={`${row.name}-${row.drug}`} row={row} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-mono font-medium">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span className="uppercase tracking-wider">Live Updates</span>
         </div>
+      </div>
 
-        <div className="col-span-12 flex flex-col gap-4 lg:col-span-4">
-          <div className="overflow-hidden rounded-lg border border-outline-variant bg-surface-container-lowest shadow-soft">
-            <div className="flex items-center justify-between border-b border-outline-variant bg-surface-bright px-4 py-4">
-              <h3 className="flex items-center gap-2 text-title-lg text-on-surface">
-                <span className="material-symbols-outlined text-[20px] text-tertiary">
-                  vaccines
-                </span>
-                Inventory Tracker
-              </h3>
-            </div>
+      {/* Dashboard Grid */}
+      <div className="grid grid-cols-1 gap-4 pb-6 sm:gap-6 lg:grid-cols-2 lg:flex-1 lg:overflow-y-auto xl:grid-cols-3">
+        {mockPharmacyQueue.map((patient) => (
+          <PrescriptionCard key={patient.id} patient={patient} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
-                <thead>
-                  <tr className="border-b border-outline-variant bg-surface-container-low">
-                    <th className="px-4 py-2 text-label-md uppercase text-on-surface-variant">
-                      Drug Name
-                    </th>
-                    <th className="px-4 py-2 text-label-md uppercase text-on-surface-variant">
-                      Cat
-                    </th>
-                    <th className="px-4 py-2 text-label-md uppercase text-on-surface-variant text-right">
-                      Stock
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant/50 text-body-md text-on-surface">
-                  {inventoryRows.map((row) => (
-                    <InventoryRow key={row.drug} row={row} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+// Sub-component to handle the independent checkbox state for each patient
+function PrescriptionCard({ patient }) {
+  const [checkedMeds, setCheckedMeds] = useState(new Set());
 
-            <div className="border-t border-outline-variant bg-surface-bright p-3 text-center">
-              <a
-                href="#"
-                className="flex items-center justify-center gap-1 text-label-md text-primary transition-colors hover:text-primary-fixed-variant"
+  const toggleMed = (medId) => {
+    const newChecked = new Set(checkedMeds);
+    if (newChecked.has(medId)) {
+      newChecked.delete(medId);
+    } else {
+      newChecked.add(medId);
+    }
+    setCheckedMeds(newChecked);
+  };
+
+  const allChecked =
+    patient.medications.length > 0 &&
+    checkedMeds.size === patient.medications.length;
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col overflow-hidden lg:h-full">
+      {/* Card Header */}
+      <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
+        <div className="min-w-0">
+          <h3 className="text-base font-bold text-slate-900">{patient.name}</h3>
+          <p className="font-mono text-xs text-slate-500 mt-1">
+            {patient.matric}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
+          <span
+            className={`px-2 py-1 rounded text-[10px] font-mono font-medium uppercase tracking-wider border ${
+              patient.urgency === "EMERGENCY"
+                ? "bg-red-50 text-red-700 border-red-100"
+                : patient.urgency === "URGENT"
+                  ? "bg-amber-50 text-amber-700 border-amber-100"
+                  : "bg-slate-100 text-slate-600 border-slate-200"
+            }`}
+          >
+            {patient.urgency}
+          </span>
+          <span className="flex items-center gap-1 rounded bg-white px-2 py-1 font-mono text-[10px] text-slate-500 uppercase border border-slate-200">
+            <Clock className="w-3 h-3" />
+            Wait: {patient.waitTime}
+          </span>
+        </div>
+      </div>
+
+      {/* Medication List */}
+      <div className="flex-1 p-4 sm:p-5 space-y-3 bg-white">
+        {patient.medications.map((med) => {
+          const isChecked = checkedMeds.has(med.id);
+          return (
+            <div
+              key={med.id}
+              onClick={() => toggleMed(med.id)}
+              className={`flex items-start gap-3 rounded-lg border p-3 transition-colors cursor-pointer group select-none sm:p-4
+                ${
+                  isChecked
+                    ? "bg-indigo-50/50 border-indigo-200"
+                    : "bg-white border-slate-200 hover:border-indigo-300 hover:bg-slate-50"
+                }
+              `}
+            >
+              <div
+                className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors
+                ${
+                  isChecked
+                    ? "bg-indigo-600 border-indigo-600 text-white"
+                    : "bg-white border-slate-300 text-transparent group-hover:border-indigo-400"
+                }
+              `}
               >
-                View Full Inventory
-                <ArrowRight className="h-4 w-4" />
-              </a>
+                <Check className="w-3 h-3" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p
+                  className={`text-sm font-bold transition-colors ${isChecked ? "text-indigo-900 line-through opacity-70" : "text-slate-900"}`}
+                >
+                  {med.name}
+                </p>
+                <p
+                  className={`text-xs mt-1 leading-relaxed transition-colors ${isChecked ? "text-indigo-700/70 line-through" : "text-slate-500"}`}
+                >
+                  {med.instructions}
+                </p>
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
+          );
+        })}
+      </div>
+
+      {/* Action Footer */}
+      <div className="p-4 sm:p-5 border-t border-slate-200 bg-slate-50 shrink-0">
+        <button
+          disabled={!allChecked}
+          className={`w-full rounded-lg px-3 py-3 text-center text-[11px] md:text-xs font-mono  leading-5 transition-all flex items-center justify-center gap-2 shadow-sm
+            ${
+              allChecked
+                ? "bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-md transform scale-[1.02]"
+                : "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
+            }
+          `}
+        >
+          <CheckCircle2 className="w-4 h-4" />
+          Mark Dispensed & Discharge
+        </button>
+      </div>
     </div>
   );
 }

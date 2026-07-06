@@ -1,235 +1,153 @@
-// frontend/src/app/layout.jsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  Users,
-  Calendar,
-  Package,
-  BarChart3,
-  HelpCircle,
-  LogOut,
-  Sun,
-  Moon,
-  Bell,
   Menu,
   X,
+  Activity,
+  Users,
   Stethoscope,
-  Heart,
-  ClipboardList,
+  TestTube2,
   Pill,
   Settings,
-  FlaskConical,
+  LogOut,
+  Bell,
+  UserCircle,
 } from "lucide-react";
-import "./globals.css";
-
-// Fontsource imports
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
 import "@fontsource/jetbrains-mono/400.css";
-import "@fontsource/material-symbols-outlined";
+import "@fontsource/jetbrains-mono/500.css";
+import "./globals.css"; // Ensure your Tailwind imports are here
 
-export default function RootLayout({
-  children,
-}) {
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
+export default function RootLayout({ children }) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
-    const storedTheme = window.localStorage.getItem("theme");
+  // Hide the sidebar and topnav completely if the user is on the login or landing page
+  const isPublicPage = pathname === "/" || pathname === "/login";
 
-    if (storedTheme === "dark") {
-      return true;
-    }
-
-    if (storedTheme === "light") {
-      return false;
-    }
-
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
-  });
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-    document.documentElement.classList.toggle("light", !darkMode);
-    window.localStorage.setItem("theme", darkMode ? "dark" : "light");
-  }, [darkMode]);
+  const navigationLinks = [
+    { name: "Reception", href: "/reception", icon: Users },
+    { name: "Nurse Triage", href: "/nurse", icon: Activity },
+    { name: "Consultations", href: "/doctor", icon: Stethoscope },
+    { name: "Laboratory", href: "/lab", icon: TestTube2 },
+    { name: "Pharmacy", href: "/pharmacy", icon: Pill },
+    { name: "Staff Admin", href: "/admin", icon: Settings },
+  ];
 
   return (
-    <html lang="en" className="light" suppressHydrationWarning>
-      <body className="bg-surface text-on-surface dark:bg-black dark:text-[#eaf1ff] flex font-sans overflow-hidden h-screen antialiased">
-        {/* Persistent Left Sidebar Container */}
-        <div
-          className={`fixed inset-0 z-40 bg-black/40 transition-opacity duration-300 md:hidden ${sidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
-          onClick={() => setSidebarOpen(false)}
-          aria-hidden="true"
-        />
-
-        <nav
-          className={`bg-white dark:bg-[#0b1c30] fixed left-0 top-0 h-full w-72 border-r border-[#c3c6d7] dark:border-[#737686] flex flex-col py-8 z-50 transform transition-transform duration-300 ease-out md:translate-x-0 md:w-64 ${sidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full md:translate-x-0"}`}
-          aria-label="Sidebar navigation"
-        >
-          <div className="px-6 mb-8 flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div>
-                <h1 className="text-lg font-bold text-[#004ac6] dark:text-[#b4c5ff]">
-                  McU Clinic
-                </h1>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(false)}
-              className="md:hidden w-9 h-9 rounded-full border border-[#c3c6d7] dark:border-[#737686] text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors flex items-center justify-center"
-              aria-label="Close sidebar"
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          {/* Navigation Items */}
-          <ul className="flex-1 px-3 space-y-1 text-sm">
-            <li>
-              <Link
-                href="/doctor/dashboard"
-                onClick={() => setSidebarOpen(false)}
-                className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
-              >
-                <Stethoscope size={18} />
-                <span>Doctor Dashboard</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/nurse/dashboard"
-                onClick={() => setSidebarOpen(false)}
-                className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
-              >
-                <Heart size={18} />
-                <span>Nurse Dashboard</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/reception/dashboard"
-                onClick={() => setSidebarOpen(false)}
-                className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
-              >
-                <ClipboardList size={18} />
-                <span>Reception Dashboard</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/reception/register"
-                onClick={() => setSidebarOpen(false)}
-                className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
-              >
-                <Users size={18} />
-                <span>Register Patient</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/pharmacy"
-                onClick={() => setSidebarOpen(false)}
-                className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
-              >
-                <Pill size={18} />
-                <span>Pharmacy</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/admin"
-                onClick={() => setSidebarOpen(false)}
-                className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
-              >
-                <Settings size={18} />
-                <span>Admin</span>
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/lab"
-                onClick={() => setSidebarOpen(false)}
-                className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
-              >
-                <FlaskConical size={18} />
-                <span>Lab</span>
-              </Link>
-            </li>
-          </ul>
-
-          {/* Bottom Utility Items */}
-          <ul className="px-3 space-y-1 mt-auto pt-4 border-t border-[#c3c6d7] dark:border-[#737686]">
-            <li>
-              <a
-                className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
-                href="#"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <HelpCircle size={18} />
-                <span>Help Center</span>
-              </a>
-            </li>
-            <li>
-              <Link
-                className="flex items-center gap-3 px-3 py-2 text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors rounded-md"
-                href="/login"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <LogOut size={18} />
-                <span>Logout</span>
-              </Link>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Global Structural Layout Wrapper */}
-        <div className="flex-1 flex flex-col md:ml-64 w-full bg-[#f8f9ff] dark:bg-black h-screen overflow-hidden">
-          {/* Main Top Nav Bar */}
-          <header className="bg-white dark:bg-[#0a0a0a] border-b border-[#c3c6d7] dark:border-[#262626] flex justify-between items-center w-full px-4 md:px-8 h-16 z-10 sticky top-0 shrink-0 gap-3">
-            <div className="flex items-center flex-1 max-w-xl gap-2 md:gap-0">
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(true)}
-                className="md:hidden rounded-full  text-[#434655] dark:text-[#bec6e0] hover:bg-[#eff4ff] dark:hover:bg-[#213145] transition-colors flex items-center justify-center shrink-0"
-                aria-label="Open sidebar"
-              >
-                <Menu size={19} />
-              </button>
-            </div>
-
-            <div className="flex items-center gap-3 md:gap-4 ml-0 md:ml-6 shrink-0">
-              {/* Theme Toggle Active Switch */}
-              <button
-                onClick={() => setDarkMode((current) => !current)}
-                className="text-[#434655] dark:text-[#bec6e0] hover:text-[#004ac6] dark:hover:text-[#b4c5ff] transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#eff4ff] dark:hover:bg-[#213145]"
-                aria-label={
-                  darkMode ? "Switch to light mode" : "Switch to dark mode"
-                }
-              >
-                {darkMode ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-
-              <button className="text-[#434655] dark:text-[#bec6e0] transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#eff4ff] dark:hover:bg-[#213145] relative">
-                <Bell size={18} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#ba1a1a] rounded-full border-2 border-white dark:border-[#0a0a0a]"></span>
-              </button>
-            </div>
-          </header>
-
-          {/* Dynamic Content Space */}
-          <main className="flex-1 overflow-auto p-4 md:p-8">{children}</main>
+    <html lang="en">
+      <body className="bg-slate-50 text-slate-900 antialiased min-h-screen flex flex-col font-sans">
+        {/* Toast Notification Placeholder */}
+        <div className="fixed top-4 inset-x-0 flex justify-center z-[100] pointer-events-none px-4">
+          {/* <div className="bg-white text-slate-800 shadow-lg rounded-lg px-4 py-3 border border-slate-200 text-sm flex items-center gap-3 pointer-events-auto">
+            <Activity className="w-4 h-4 text-indigo-600" />
+            System initialized
+          </div> */}
         </div>
+
+        {isPublicPage ? (
+          // Render only the children for public pages (Landing / Login)
+          <main className="flex-1 w-full flex flex-col">{children}</main>
+        ) : (
+          // Render the full authenticated application shell
+          <div className="flex flex-col min-h-screen w-full">
+            {/* Top Navigation Bar */}
+            <header className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
+              <div className="flex justify-between items-center w-full px-4 md:px-8 py-4 mx-auto">
+                <div className="flex items-center gap-4">
+                  {/* Mobile Menu Toggle */}
+                  <button
+                    className="md:hidden p-1 text-black hover:text-indigo-600 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  >
+                    {isMobileMenuOpen ? (
+                      <X className="w-5 h-5" />
+                    ) : (
+                      <Menu className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-5 text-black">
+                  <button className="hover:text-indigo-600 transition-colors">
+                    <Bell className="w-5 h-5" />
+                  </button>
+                  <button className="hover:text-indigo-600 transition-colors">
+                    <UserCircle className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+            </header>
+
+            {/* Main Application Area */}
+            <div className="flex flex-1 w-full relative">
+              {/* Sidebar Navigation */}
+              <aside
+                className={`
+                fixed top-[57px] bottom-0 left-0 w-64 bg-white border-r border-slate-200 p-4 z-30 flex flex-col
+                transform transition-transform duration-300 ease-in-out
+                ${isMobileMenuOpen ? "translate-x-0 shadow-2xl md:shadow-none" : "-translate-x-full md:translate-x-0"}
+              `}
+              >
+                <div className="mb-6 px-4 pt-4">
+                  <h2 className="text-sm font-semibold text-black uppercase tracking-widest font-mono">
+                    McU Clinic
+                  </h2>
+                </div>
+
+                <nav className=" flex-1 space-y-1 overflow-y-auto font-mono">
+                  {navigationLinks.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname.startsWith(item.href);
+                    return (
+                      <Link
+                        key={item.name}
+                        href={item.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-[13px] md:text-sm font-medium ${
+                          isActive
+                            ? "bg-indigo-50 text-indigo-800"
+                            : "text-black hover:bg-slate-50 hover:text-slate-900"
+                        }`}
+                      >
+                        {/* <Icon
+                          className={`w-4 h-3 md:w-5 md:h-5 ${isActive ? "text-indigo-600" : "text-black"}`}
+                        /> */}
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                </nav>
+
+                <div className="mt-auto pt-4">
+                  <button className="w-full flex items-center  gap-2 px-4 py-2 text-[13px] md:text-sm font-medium text-black hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors font-mono">
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </div>
+              </aside>
+
+              {/* Mobile Overlay */}
+              {isMobileMenuOpen && (
+                <div
+                  className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-20 md:hidden"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                />
+              )}
+
+              {/* Dynamic Content Area */}
+              <main className="flex-1 w-full bg-slate-50 pt-10 pb-4 px-4 md:ml-64 md:p-8">
+                {children}
+              </main>
+            </div>
+          </div>
+        )}
       </body>
     </html>
   );

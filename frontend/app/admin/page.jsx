@@ -1,382 +1,359 @@
+"use client";
+
+import { useState } from "react";
 import {
-  Activity,
-  BarChart3,
-  BedDouble,
-  CircleDollarSign,
-  ClipboardList,
-  Gauge,
-  HelpCircle,
-  LayoutDashboard,
-  LogOut,
-  Package2,
   Search,
-  Settings,
-  Stethoscope,
+  Plus,
+  Edit2,
+  Trash2,
+  X,
+  ShieldAlert,
+  ChevronLeft,
+  ChevronRight,
   Users,
 } from "lucide-react";
 
-const navigationItems = [
-  { label: "Dashboard", icon: LayoutDashboard, active: true },
-  { label: "Patients", icon: BedDouble },
-  { label: "Staffing", icon: Users },
-  { label: "Inventory", icon: Package2 },
-  { label: "Analytics", icon: BarChart3 },
-  { label: "Settings", icon: Settings },
-];
+export default function AdminDashboard() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-const statCards = [
-  {
-    label: "Total Patients",
-    value: "12,482",
-    trend: "+2.4%",
-    detail: "vs last month",
-    icon: Users,
-    trendTone: "text-emerald-600",
-  },
-  {
-    label: "Active Doctors",
-    value: "48",
-    trend: "Stable",
-    detail: "currently on shift",
-    icon: Stethoscope,
-    trendTone: "text-on-surface-variant",
-  },
-  {
-    label: "Prescriptions Today",
-    value: "342",
-    trend: "+12",
-    detail: "vs yesterday",
-    icon: ClipboardList,
-    trendTone: "text-emerald-600",
-  },
-  {
-    label: "Revenue / Cost (YTD)",
-    value: "$1.2M",
-    trend: "-1.1%",
-    detail: "margin variance",
-    icon: CircleDollarSign,
-    trendTone: "text-red-600",
-  },
-];
+  // Mock data representing GET /api/v1/staff
+  const mockStaff = [
+    {
+      id: "MCP-STAFF-001",
+      name: "Dr. Sarah Jenkins",
+      email: "s.jenkins@mcpherson.edu",
+      role: "DOCTOR",
+    },
+    {
+      id: "MCP-STAFF-042",
+      name: "Michael Chang, RN",
+      email: "m.chang@mcpherson.edu",
+      role: "NURSE",
+    },
+    {
+      id: "MCP-STAFF-089",
+      name: "Elena Rodriguez",
+      email: "e.rodriguez@mcpherson.edu",
+      role: "ADMIN",
+    },
+    {
+      id: "MCP-STAFF-112",
+      name: "Dr. James Wilson",
+      email: "j.wilson@mcpherson.edu",
+      role: "DOCTOR",
+    },
+    {
+      id: "MCP-STAFF-156",
+      name: "David Ojo",
+      email: "d.ojo@mcpherson.edu",
+      role: "LABORATORIST",
+    },
+    {
+      id: "MCP-STAFF-188",
+      name: "Aisha Bello",
+      email: "a.bello@mcpherson.edu",
+      role: "PHARMACIST",
+    },
+  ];
 
-const staffRows = [
-  {
-    initials: "SM",
-    name: "Dr. Sarah Mitchell",
-    role: "Attending Physician",
-    department: "Cardiology",
-    status: "Active",
-    tone: "bg-emerald-100 text-emerald-800 border-emerald-200",
-    dot: "bg-emerald-600",
-  },
-  {
-    initials: "JL",
-    name: "James Lawson",
-    role: "Registered Nurse",
-    department: "Emergency",
-    status: "On Leave",
-    tone: "bg-amber-100 text-amber-800 border-amber-200",
-    dot: "bg-amber-600",
-  },
-  {
-    initials: "AK",
-    name: "Dr. Aliyah Khan",
-    role: "Chief Surgeon",
-    department: "Neurology",
-    status: "Offline",
-    tone: "bg-surface-variant text-on-surface-variant border-outline-variant/50",
-    dot: "bg-outline",
-  },
-  {
-    initials: "MR",
-    name: "Michael Ross",
-    role: "System Administrator",
-    department: "IT Ops",
-    status: "Active",
-    tone: "bg-emerald-100 text-emerald-800 border-emerald-200",
-    dot: "bg-emerald-600",
-  },
-];
-
-function NavItem({ item }) {
-  const Icon = item.icon;
+  // Helper to style badges based on role
+  const getRoleBadge = (role) => {
+    switch (role) {
+      case "DOCTOR":
+        return "bg-indigo-50 text-indigo-700 border-indigo-200";
+      case "NURSE":
+        return "bg-teal-50 text-teal-700 border-teal-200";
+      case "ADMIN":
+        return "bg-slate-100 text-slate-700 border-slate-200";
+      case "LABORATORIST":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "PHARMACIST":
+        return "bg-amber-50 text-amber-700 border-amber-200";
+      default:
+        return "bg-slate-50 text-slate-600 border-slate-200";
+    }
+  };
 
   return (
-    <li>
-      <a
-        href="#"
-        className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${item.active ? "bg-secondary-container/40 text-primary font-semibold" : "text-on-surface-variant hover:bg-surface-container-low dark:hover:bg-surface-container-high"}`}
-      >
-        <Icon className="h-4 w-4" />
-        <span>{item.label}</span>
-      </a>
-    </li>
-  );
-}
+    <div className="w-full max-w-7xl mx-auto space-y-6 flex flex-col lg:h-[calc(100vh-120px)]">
+      {/* Header & Actions Area */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shrink-0">
+        <div>
+          <h1 className="text-xl font-mono font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            Staff Directory
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            Manage clinic personnel and access roles.
+          </p>
+        </div>
 
-function StatCard({ card }) {
-  const Icon = card.icon;
+        <div className="flex flex-col sm:flex-row w-full md:w-auto items-center gap-3">
+          {/* Search Bar */}
+          <div className="relative w-full sm:w-72">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search personnel..."
+              className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all bg-white"
+            />
+          </div>
 
-  return (
-    <div className="bg-surface-container-lowest border border-outline-variant/50 rounded-xl p-4 shadow-soft flex flex-col justify-between gap-6 hover:border-primary/30 transition-colors">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-label-md uppercase tracking-wider text-on-surface-variant">
-          {card.label}
-        </p>
-        <span className="rounded-md bg-primary/10 p-1.5 text-primary/80">
-          <Icon className="h-4 w-4" />
-        </span>
+          {/* Add Staff Button */}
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs md:text-sm font-mono font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add Staff
+          </button>
+        </div>
       </div>
-      <div>
-        <p className="text-display-lg text-on-surface mb-1">{card.value}</p>
-        <div className="flex items-center gap-1 text-sm">
-          <span className={`font-medium ${card.trendTone}`}>{card.trend}</span>
-          <span className="text-on-surface-variant/70 text-xs ml-1">
-            {card.detail}
+
+      {/* Main Data Table Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col min-h-0 overflow-hidden">
+        <div className="px-4 py-4 sm:px-6 border-b border-slate-200 bg-slate-50 flex justify-between items-center shrink-0">
+          <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <Users className="w-4 h-4 text-slate-500" />
+            Active Personnel
+          </h2>
+          <span className="bg-white border border-slate-200 text-slate-600 px-2.5 py-1 rounded-md text-xs font-mono font-medium">
+            {mockStaff.length} Total
           </span>
         </div>
-      </div>
-    </div>
-  );
-}
 
-function StaffRow({ staff }) {
-  return (
-    <tr className="group transition-colors hover:bg-surface-container-low/30">
-      <td className="py-3 px-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-container/20 text-primary font-bold text-xs">
-            {staff.initials}
-          </div>
-          <span className="font-medium text-on-surface">{staff.name}</span>
-        </div>
-      </td>
-      <td className="py-3 px-4 text-on-surface">{staff.role}</td>
-      <td className="py-3 px-4 text-on-surface-variant">{staff.department}</td>
-      <td className="py-3 px-4">
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${staff.tone}`}
-        >
-          <span className={`h-1.5 w-1.5 rounded-full ${staff.dot}`} />
-          {staff.status}
-        </span>
-      </td>
-      <td className="py-3 px-4 text-right">
-        <button
-          type="button"
-          className="opacity-0 transition-colors group-hover:opacity-100 text-outline hover:text-primary"
-          aria-label={`Edit ${staff.name}`}
-        >
-          <Activity className="h-5 w-5" />
-        </button>
-      </td>
-    </tr>
-  );
-}
-
-export default function AdminPage() {
-  return (
-    <main className="min-h-screen bg-surface text-on-surface selection:bg-primary/20 selection:text-primary">
-      <aside className="hidden md:flex fixed left-0 top-0 z-40 h-screen w-64 flex-col border-r border-outline-variant bg-surface-container-lowest py-8">
-        <div className="mb-8 px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-on-primary shadow-soft">
-              <Gauge className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-title-lg font-bold text-primary">
-                MediCenter
-              </h1>
-              <p className="text-label-md text-on-surface-variant">
-                Clinical Admin
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <nav className="flex-1 overflow-y-auto px-3">
-          <ul className="space-y-1">
-            {navigationItems.map((item) => (
-              <NavItem key={item.label} item={item} />
-            ))}
-          </ul>
-        </nav>
-
-        <div className="mt-auto border-t border-outline-variant/30 px-3 pt-4">
-          <ul className="space-y-1">
-            <li>
-              <a
-                href="#"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-on-surface-variant transition-colors hover:bg-surface-container-low"
-              >
-                <HelpCircle className="h-4 w-4" />
-                <span>Support</span>
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-on-surface-variant transition-colors hover:bg-surface-container-low"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Sign Out</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </aside>
-
-      <section className="min-h-screen md:ml-64 flex flex-col">
-        <header className="sticky top-0 z-30 border-b border-outline-variant bg-surface/85 backdrop-blur-md">
-          <div className="flex items-center justify-between gap-4 px-4 py-3 md:px-8">
-            <div className="relative hidden w-full max-w-md items-center md:flex">
-              <Search className="absolute left-3 h-4 w-4 text-outline" />
-              <input
-                type="text"
-                placeholder="Search patients, staff, or records..."
-                className="w-full rounded-md border border-outline-variant bg-surface-container-lowest py-2 pl-10 pr-4 text-sm text-on-surface placeholder:text-outline/70 outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary"
-              />
-            </div>
-
-            <div className="ml-auto flex items-center gap-2 md:gap-3">
-              <button
-                type="button"
-                className="rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-low"
-                aria-label="Toggle theme"
-              >
-                <span className="material-symbols-outlined">dark_mode</span>
-              </button>
-              <button
-                type="button"
-                className="relative rounded-full p-2 text-on-surface-variant transition-colors hover:bg-surface-container-low"
-                aria-label="Notifications"
-              >
-                <span className="material-symbols-outlined">notifications</span>
-                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-error" />
-              </button>
-              <div className="ml-1 flex items-center border-l border-outline-variant/50 pl-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-container text-on-primary-container font-semibold">
-                  AD
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <main className="flex-1 overflow-auto p-4 md:p-8">
-          <div className="mx-auto flex w-full max-w-[1280px] flex-col gap-8">
-            <section>
-              <h2 className="mb-1 text-headline-lg font-bold text-on-surface">
-                Overview
-              </h2>
-              <p className="text-body-md text-on-surface-variant">
-                Enterprise clinical metrics for today.
-              </p>
-            </section>
-
-            <section className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {statCards.map((card) => (
-                <StatCard key={card.label} card={card} />
-              ))}
-            </section>
-
-            <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <div className="flex h-[400px] flex-col rounded-xl border border-outline-variant bg-surface-container-lowest p-4 shadow-soft lg:col-span-1">
-                <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-title-lg font-semibold text-on-surface">
-                    Patient Traffic
+        <div className="divide-y divide-slate-100 md:hidden">
+          {mockStaff.map((staff) => (
+            <div key={staff.id} className="p-4">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-semibold text-slate-900">
+                    {staff.name}
                   </h3>
-                  <button
-                    type="button"
-                    className="rounded p-1 text-outline transition-colors hover:bg-surface-variant/50 hover:text-on-surface"
-                    aria-label="More options"
-                  >
-                    <span className="material-symbols-outlined text-sm">
-                      more_horiz
-                    </span>
-                  </button>
+                  <p className="mt-1 font-mono text-xs text-slate-500">
+                    {staff.id}
+                  </p>
                 </div>
-                <div className="relative flex flex-1 items-center justify-center overflow-hidden rounded-lg border border-outline-variant/30 bg-surface-container-low/30">
-                  <div className="absolute bottom-0 h-[60%] w-full bg-gradient-to-t from-primary/20 to-transparent" />
-                  <svg
-                    className="absolute bottom-0 h-full w-full text-primary"
-                    preserveAspectRatio="none"
-                    viewBox="0 0 100 100"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M0,100 L0,70 Q10,60 20,75 T40,65 T60,80 T80,50 T100,40 L100,100 Z"
-                      fill="currentColor"
-                      opacity="0.1"
-                    />
-                    <path
-                      d="M0,70 Q10,60 20,75 T40,65 T60,80 T80,50 T100,40"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      vectorEffect="non-scaling-stroke"
-                    />
-                  </svg>
-                  <div className="absolute left-4 top-4 rounded border border-outline-variant/50 bg-surface/90 px-2 py-1 text-xs font-medium backdrop-blur">
-                    30 Days Trend
-                  </div>
-                </div>
+                <span
+                  className={`shrink-0 inline-flex items-center px-2 py-1 rounded text-[10px] font-mono font-bold uppercase tracking-wider border ${getRoleBadge(staff.role)}`}
+                >
+                  {staff.role}
+                </span>
               </div>
 
-              <div className="flex h-[400px] flex-col overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-soft lg:col-span-2">
-                <div className="flex items-center justify-between border-b border-outline-variant p-4">
-                  <div>
-                    <h3 className="text-title-lg font-semibold text-on-surface">
-                      Staff Management
-                    </h3>
-                    <p className="mt-1 text-xs text-on-surface-variant">
-                      Real-time personnel status.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-label-md text-on-primary transition-all hover:bg-primary/90 active:scale-95"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">
-                      add
-                    </span>
-                    Add Staff
-                  </button>
-                </div>
+              <p className="mt-3 break-all text-xs text-slate-500">
+                {staff.email}
+              </p>
 
-                <div className="flex-1 overflow-auto">
-                  <table className="min-w-[600px] w-full border-collapse text-left">
-                    <thead className="sticky top-0 z-10 bg-surface-container-low/50 backdrop-blur-sm">
-                      <tr>
-                        <th className="border-b border-outline-variant/50 px-4 py-3 text-label-md font-medium text-on-surface-variant">
-                          Name
-                        </th>
-                        <th className="border-b border-outline-variant/50 px-4 py-3 text-label-md font-medium text-on-surface-variant">
-                          Role
-                        </th>
-                        <th className="border-b border-outline-variant/50 px-4 py-3 text-label-md font-medium text-on-surface-variant">
-                          Department
-                        </th>
-                        <th className="border-b border-outline-variant/50 px-4 py-3 text-label-md font-medium text-on-surface-variant">
-                          Status
-                        </th>
-                        <th className="border-b border-outline-variant/50 px-4 py-3 text-right text-label-md font-medium text-on-surface-variant">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-outline-variant/30 text-sm text-on-surface">
-                      {staffRows.map((staff) => (
-                        <StaffRow key={staff.name} staff={staff} />
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <button className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-mono font-medium text-slate-600 transition-colors hover:bg-indigo-50 hover:text-indigo-600">
+                  <Edit2 className="w-4 h-4" />
+                  Edit
+                </button>
+                <button className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-mono font-medium text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600">
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
               </div>
-            </section>
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden md:block md:overflow-x-auto lg:flex-1">
+          <table className="w-full min-w-[760px] text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="py-3 px-6 text-xs font-mono font-semibold text-slate-500 uppercase tracking-wider">
+                  Staff ID
+                </th>
+                <th className="py-3 px-6 text-xs font-mono font-semibold text-slate-500 uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="py-3 px-6 text-xs font-mono font-semibold text-slate-500 uppercase tracking-wider">
+                  Email
+                </th>
+                <th className="py-3 px-6 text-xs font-mono font-semibold text-slate-500 uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="py-3 px-6 text-xs font-mono font-semibold text-slate-500 uppercase tracking-wider text-right">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {mockStaff.map((staff) => (
+                <tr
+                  key={staff.id}
+                  className="hover:bg-slate-50/50 transition-colors group"
+                >
+                  <td className="py-4 px-6 font-mono text-xs md:text-sm text-slate-900 font-medium">
+                    {staff.id}
+                  </td>
+                  <td className="py-4 px-6 text-sm font-medium text-slate-900">
+                    {staff.name}
+                  </td>
+                  <td className="py-4 px-6 text-xs text-slate-500">
+                    {staff.email}
+                  </td>
+                  <td className="py-4 px-6">
+                    <span
+                      className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider border ${getRoleBadge(staff.role)}`}
+                    >
+                      {staff.role}
+                    </span>
+                  </td>
+                  <td className="py-4 px-6 text-right">
+                    <div className="flex items-center justify-end gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                      <button className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        <div className="px-4 py-3 sm:px-6 border-t border-slate-200 bg-slate-50/50 flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center shrink-0">
+          <p className="text-xs text-slate-500">
+            Showing <span className="font-medium text-slate-900">1</span> to{" "}
+            <span className="font-medium text-slate-900">
+              {mockStaff.length}
+            </span>{" "}
+            of <span className="font-medium text-slate-900">124</span> entries
+          </p>
+          <div className="flex gap-1 border border-slate-200 rounded-md bg-white shadow-sm overflow-hidden">
+            <button
+              className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors border-r border-slate-200 disabled:opacity-50"
+              disabled
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button className="px-3 py-1.5 text-xs font-mono font-medium text-indigo-600 bg-indigo-50 border-r border-slate-200">
+              1
+            </button>
+            <button className="px-3 py-1.5 text-xs font-mono font-medium text-slate-600 hover:bg-slate-50 border-r border-slate-200">
+              2
+            </button>
+            <button className="px-3 py-1.5 text-xs font-mono font-medium text-slate-600 hover:bg-slate-50 border-r border-slate-200">
+              3
+            </button>
+            <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors">
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
-        </main>
-      </section>
-    </main>
+        </div>
+      </div>
+
+      {/* =========================================
+          ADD STAFF MODAL
+      ========================================= */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm"
+            onClick={() => setIsModalOpen(false)}
+          />
+          <div className="bg-white w-full max-w-lg max-h-[calc(100vh-2rem)] rounded-xl shadow-xl border border-slate-200 relative z-10 flex flex-col overflow-hidden">
+            <div className="px-4 py-4 sm:px-6 border-b border-slate-200 flex justify-between items-center bg-slate-50 rounded-t-xl shrink-0">
+              <h3 className="text-lg font-bold text-slate-900">
+                Add New Staff Member
+              </h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-md hover:bg-slate-200 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-4 sm:p-6 overflow-y-auto">
+              <form className="space-y-4">
+                <div>
+                  <label className="block text-xs font-mono font-medium text-slate-700 mb-1.5">
+                    Staff ID (Auto-generated)
+                  </label>
+                  <input
+                    type="text"
+                    value="MCP-STAFF-125"
+                    disabled
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono text-slate-500 cursor-not-allowed"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-mono font-medium text-slate-700 mb-1.5">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Jane"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-mono font-medium text-slate-700 mb-1.5">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Doe"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-medium text-slate-700 mb-1.5">
+                    Professional Email
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="j.doe@mcpherson.edu"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono font-medium text-slate-700 mb-1.5">
+                    Role
+                  </label>
+                  <select
+                    defaultValue=""
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition-all"
+                  >
+                    <option value="" disabled>
+                      Select a role...
+                    </option>
+                    <option value="DOCTOR">Doctor</option>
+                    <option value="NURSE">Nurse</option>
+                    <option value="ADMIN">Administrator</option>
+                    <option value="LABORATORIST">Laboratorist</option>
+                    <option value="PHARMACIST">Pharmacist</option>
+                  </select>
+                </div>
+              </form>
+            </div>
+
+            <div className="px-4 py-4 sm:px-6 border-t border-slate-200 bg-slate-50 rounded-b-xl flex flex-col-reverse sm:flex-row sm:justify-end gap-3 shrink-0">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 rounded-lg text-xs font-mono font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition-colors shadow-sm"
+              >
+                Cancel
+              </button>
+              <button className="px-6 py-2 rounded-lg text-sm font-mono font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm flex items-center justify-center gap-2">
+                Save Staff
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
