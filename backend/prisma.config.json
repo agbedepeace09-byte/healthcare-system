@@ -1,0 +1,6 @@
+{
+  "adapter": {
+    "provider": "postgresql",
+    "connectionString": "postgresql://postgres.udlckxxjvfdntbpovkkl:healthcare2026project@aws-1-eu-central-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
+  }
+}

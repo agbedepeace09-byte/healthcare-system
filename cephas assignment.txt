@@ -30,3 +30,16 @@ action buttons are not working[done]
 ADMIN 
 1.All buttons are static [done]
 in the admin dashboard when a user clicks the dashboard (i.e total staffs, or active staff),it should be able to work by showing you the filtered sectiom or something[done]
+
+
+
+
+
+This stage is where the system after predicting patient risk, the system assigns healthcare resources such as beds and level of care based  on their risk level.
+Based on predicted patient risk
+High risk= immediate care and bed 
+Medium risk = scheduled care
+Low risk = outpatient care
+This ensures efficient use of resources
+
+NOTE WE WILL STILL INTEGRATE PATIENT ASSESSMENT INTO THE SYSTEM

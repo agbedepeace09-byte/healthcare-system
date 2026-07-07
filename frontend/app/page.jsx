@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, ArrowRight, ShieldCheck, Server, Zap } from "lucide-react";
+import { Activity, ArrowRight } from "lucide-react";
 
 export default function LandingPage() {
   return (
@@ -36,32 +36,6 @@ export default function LandingPage() {
         </div>
       </main>
 
-      {/* Footer
-      <footer className="w-full py-6 px-8 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-slate-200 bg-white relative z-10">
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <span>© 2026 McPherson University Clinic.</span>
-        </div>
-        <div className="flex gap-6 text-sm">
-          <Link
-            href="#"
-            className="text-slate-500 hover:text-indigo-600 transition-colors"
-          >
-            Privacy Policy
-          </Link>
-          <Link
-            href="#"
-            className="text-slate-500 hover:text-indigo-600 transition-colors"
-          >
-            Terms of Service
-          </Link>
-          <Link
-            href="#"
-            className="text-slate-500 hover:text-indigo-600 transition-colors"
-          >
-            Help Desk
-          </Link>
-        </div>
-      </footer> */}
     </div>
   );
 }

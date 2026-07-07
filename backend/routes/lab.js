@@ -6,12 +6,20 @@ const prisma = require("../prismaClient");
 router.get("/queue", async (req, res) => {
   try {
     const pendingLabs = await prisma.visit.findMany({
-      where: { status: "AT_LAB" },
+      where: {
+        status: "AT_LAB",
+        labRequests: { some: { status: "PENDING" } },
+      },
       include: {
         patient: {
           select: { firstName: true, lastName: true, matricNumber: true },
         },
-        labRequests: { where: { status: "PENDING" } },
+        labRequests: {
+          where: { status: "PENDING" },
+          include: {
+            orderingDoctor: { select: { firstName: true, lastName: true } },
+          },
+        },
       },
       orderBy: { checkInTime: "asc" },
     });

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Users,
@@ -11,54 +12,118 @@ import {
   FlaskConical,
 } from "lucide-react";
 
-export default function DoctorDashboard() {
-  // Mock data representing GET /api/v1/visits/queue?status=WAITING_CONSULTATION
-  const consultationQueue = [
-    {
-      visitId: "VST-801",
-      matric: "MCU/24/0812",
-      name: "Sarah Jenkins",
-      urgency: "EMERGENCY",
-      waitTime: "45 mins",
-      timeIn: "08:15 AM",
-    },
-    {
-      visitId: "VST-802",
-      matric: "MCU/24/1105",
-      name: "Michael Chang",
-      urgency: "ROUTINE",
-      waitTime: "12 mins",
-      timeIn: "08:48 AM",
-    },
-    {
-      visitId: "VST-803",
-      matric: "MCU/24/0933",
-      name: "Elena Rodriguez",
-      urgency: "ROUTINE",
-      waitTime: "8 mins",
-      timeIn: "08:52 AM",
-    },
-  ];
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-  // Mock data representing GET /api/v1/visits/queue?status=WAITING_LAB_REVIEW
-  const labQueue = [
-    {
-      visitId: "VST-742",
-      matric: "MCU/24/0155",
-      name: "David O'Connor",
-      urgency: "URGENT",
-      waitTime: "5 mins",
-      tests: "CBC, Lipid Panel",
-    },
-    {
-      visitId: "VST-745",
-      matric: "MCU/24/0772",
-      name: "Aisha Patel",
-      urgency: "ROUTINE",
-      waitTime: "15 mins",
-      tests: "Urinalysis",
-    },
-  ];
+export default function DoctorDashboard() {
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [consultationQueue, setConsultationQueue] = useState([]);
+  const [labQueue, setLabQueue] = useState([]);
+
+  useEffect(() => {
+    const fetchQueues = async () => {
+      setLoading(true);
+      setErrorMessage("");
+
+      try {
+        const [consultationRes, labRes] = await Promise.all([
+          fetch(`${API_BASE}/api/v1/visits/queue?status=WAITING_CONSULTATION`),
+          fetch(`${API_BASE}/api/v1/lab/queue`),
+        ]);
+
+        if (!consultationRes.ok) {
+          throw new Error("Failed to fetch consultation queue");
+        }
+        if (!labRes.ok) {
+          throw new Error("Failed to fetch lab queue");
+        }
+
+        const [consultationData, labData] = await Promise.all([
+          consultationRes.json(),
+          labRes.json(),
+        ]);
+
+        setConsultationQueue(
+          consultationData.map((visit) => ({
+            visitId: visit.visitId,
+            matric: visit.patient?.matricNumber || "",
+            name: `${visit.patient?.firstName || ""} ${visit.patient?.lastName || ""}`.trim(),
+            urgency: visit.urgency || "ROUTINE",
+            waitTime: "Unknown",
+            timeIn: visit.checkInTime
+              ? new Date(visit.checkInTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+              : "N/A",
+          }))
+        );
+
+        setLabQueue(
+          labData.map((visit) => {
+            const request = visit.labRequests?.[0] || {};
+            return {
+              visitId: visit.visitId,
+              matric: visit.patient?.matricNumber || "",
+              name: `${visit.patient?.firstName || ""} ${visit.patient?.lastName || ""}`.trim(),
+              urgency: visit.urgency || "ROUTINE",
+              waitTime: "Unknown",
+              tests: request.testType || "Lab Request",
+            };
+          })
+        );
+      } catch (err) {
+        console.error("Queue fetch error", err);
+        setErrorMessage(err.message || "Unable to load queue data.");
+        setConsultationQueue([
+          {
+            visitId: "VST-801",
+            matric: "220202006",
+            name: "okodugha peter",
+            urgency: "EMERGENCY",
+            waitTime: "45 mins",
+            timeIn: "08:15 AM",
+          },
+          {
+            visitId: "VST-802",
+            matric: "220202010",
+            name: "abayomi gabriel",
+            urgency: "ROUTINE",
+            waitTime: "12 mins",
+            timeIn: "08:48 AM",
+          },
+          {
+            visitId: "VST-803",
+            matric: "220202015",
+            name: "uthman hameedah",
+            urgency: "ROUTINE",
+            waitTime: "8 mins",
+            timeIn: "08:52 AM",
+          },
+        ]);
+        setLabQueue([
+          {
+            visitId: "VST-742",
+            matric: "2202001",
+            name: "Adesanya Demilade",
+            urgency: "URGENT",
+            waitTime: "5 mins",
+            tests: "CBC, Lipid Panel",
+          },
+          {
+            visitId: "VST-745",
+            matric: "220202002",
+            name: "obie joshua",
+            urgency: "ROUTINE",
+            waitTime: "15 mins",
+            tests: "Urinalysis",
+          },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQueues();
+  }, []);
+
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 flex flex-col lg:h-[calc(100vh-120px)]">

@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Pill, Clock, CheckCircle2, Check } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Clock, CheckCircle2, Check } from "lucide-react";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function PharmacyDashboard() {
-  // Mock data representing GET /api/v1/pharmacy/queue
-  const mockPharmacyQueue = [
+  const [mockPharmacyQueue, setMockPharmacyQueue] = useState([
     {
       id: 1,
       visitId: "VST-801",
-      name: "Sarah Jenkins",
-      matric: "MCU/24/0812",
+      name: "makinde Ogunmakin",
+      matric: "2202008",
       waitTime: "12m",
       urgency: "ROUTINE",
       medications: [
@@ -29,23 +30,23 @@ export default function PharmacyDashboard() {
     {
       id: 2,
       visitId: "VST-804",
-      name: "Marcus Thorne",
-      matric: "MCU/21/1193",
+      name: "Ade Brief",
+      matric: "220202009",
       waitTime: "28m",
       urgency: "EMERGENCY",
       medications: [
         {
           id: "m3",
-          name: "Lisinopril 10mg",
-          instructions: "Take 1 tablet daily in the morning.",
+          name: "Lisinopril calcium 10mg",
+          instructions: "Take 3 tablets daily in the morning.",
         },
       ],
     },
     {
       id: 3,
       visitId: "VST-806",
-      name: "Elena Rodriguez",
-      matric: "MCU/24/0042",
+      name: "Oluguide Daniel",
+      matric: "220202011",
       waitTime: "5m",
       urgency: "URGENT",
       medications: [

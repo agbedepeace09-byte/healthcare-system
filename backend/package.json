@@ -24,6 +24,9 @@
     "multer": "^2.2.0",
     "pg": "^8.22.0"
   },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "devDependencies": {
     "prisma": "^7.6.0"
   }

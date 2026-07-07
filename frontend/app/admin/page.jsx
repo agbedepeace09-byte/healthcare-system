@@ -7,18 +7,9 @@ import {
   Edit2,
   Trash2,
   X,
-  ShieldAlert,
   ChevronLeft,
   ChevronRight,
   Users,
-  Activity,
-  Clock,
-  MoreHorizontal,
-  UserCheck,
-  UserX,
-  TrendingUp,
-  BarChart3,
-  History,
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -28,38 +19,38 @@ export default function AdminDashboard() {
   const mockStaff = [
     {
       id: "MCP-STAFF-001",
-      name: "Dr. Sarah Jenkins",
-      email: "s.jenkins@mcpherson.edu",
+      name: "Dr. Agbede Divine ",
+      email: "D.Agbede@mcpherson.edu",
       role: "DOCTOR",
     },
     {
       id: "MCP-STAFF-042",
-      name: "Michael Chang, RN",
-      email: "m.chang@mcpherson.edu",
+      name: "Edogun Dave, RN",
+      email: "D.Edogun@mcpherson.edu",
       role: "NURSE",
     },
     {
       id: "MCP-STAFF-089",
-      name: "Elena Rodriguez",
-      email: "e.rodriguez@mcpherson.edu",
+      name: "Agbede Peace",
+      email: "P.Agbede@mcpherson.edu",
       role: "ADMIN",
     },
     {
       id: "MCP-STAFF-112",
-      name: "Dr. James Wilson",
-      email: "j.wilson@mcpherson.edu",
+      name: "Dr. Asiwaju Jason",
+      email: "J.Asiwaju@mcpherson.edu",
       role: "DOCTOR",
     },
     {
       id: "MCP-STAFF-156",
-      name: "David Ojo",
-      email: "d.ojo@mcpherson.edu",
+      name: "Raji Aliyah",
+      email: "R.Aliyah@mcpherson.edu",
       role: "LABORATORIST",
     },
     {
       id: "MCP-STAFF-188",
       name: "Aisha Bello",
-      email: "a.bello@mcpherson.edu",
+      email: "A.Bello@mcpherson.edu",
       role: "PHARMACIST",
     },
   ];

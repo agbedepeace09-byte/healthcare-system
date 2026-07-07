@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
   ArrowLeft,
-  Bell,
-  ChevronDown,
   Clock,
   Activity,
   HeartPulse,
@@ -24,38 +23,100 @@ import {
 } from "lucide-react";
 
 export default function MedicalEncounter() {
+  const params = useParams();
+  const visitId = params.visitId;
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [entitiesExtracted, setEntitiesExtracted] = useState(false);
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
+  const [patient, setPatient] = useState(null);
+  const [visitNumericId, setVisitNumericId] = useState(null);
 
-  // Mock data representing patient context
-  const patient = {
-    name: "Sarah Jenkins",
-    matric: "MAT-24-0812",
-    urgency: "EMERGENCY",
-    vitals: { temp: "102.4", bp: "118/76", pulse: "88", weight: "70.5" },
-    history: [
-      {
-        date: "Oct 12, 2025",
-        title: "Routine Checkup",
-        desc: "Patient reported mild fatigue. Vitals normal. Recommended vitamin D supplementation.",
-      },
-      {
-        date: "Mar 05, 2025",
-        title: "Urgent Care - Sprain",
-        desc: "Right ankle sprain grade 2. Applied compression bandage. Prescribed NSAIDs.",
-      },
-      {
-        date: "Nov 18, 2024",
-        title: "Annual Physical",
-        desc: "All labs within normal limits. Up to date on vaccinations.",
-      },
-    ],
-  };
+  useEffect(() => {
+    if (!visitId) return;
+
+    const fetchVisit = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/api/v1/visits/${visitId}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Transform API data to match UI expectations
+        setPatient({
+          name: `${data.patient?.firstName || ''} ${data.patient?.lastName || ''}`.trim(),
+          matric: data.patient?.matricNumber || data.patient?.id || visitId,
+          urgency: data.urgency || 'ROUTINE',
+          visitId: data.visitId,
+          vitals: {
+            temp: data.vitals?.temperature || 'N/A',
+            bp: data.vitals?.bloodPress || 'N/A',
+            pulse: data.vitals?.pulseRate || 'N/A',
+            weight: data.vitals?.weight || 'N/A',
+          },
+          history: data.notes?.map(note => ({
+            date: new Date(note.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }),
+            title: 'Clinical Note',
+            desc: note.symptoms || 'No symptoms recorded',
+          })) || [],
+        });
+        setVisitNumericId(data.id);
+      } catch (err) {
+        console.error('Error fetching visit:', err);
+        setError(err.message);
+        console.warn('Using demo data as fallback');
+        setPatient({
+          name: "Demo Patient",
+          matric: visitId,
+          urgency: "ROUTINE",
+          vitals: { temp: "37.0", bp: "120/80", pulse: "72", weight: "70" },
+          history: [],
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVisit();
+  }, [visitId]);
 
   const handleExtraction = (e) => {
     e.preventDefault();
     // In production, this triggers the POST /api/v1/consultations/:noteId/extract-entities endpoint
     setEntitiesExtracted(true);
+  };
+
+  const admitAndAllocate = async () => {
+    if (!visitNumericId) return alert('Visit id not loaded yet.');
+
+    // Simple prompt-based inputs for wardId and nurseId (optional)
+    const wardInput = window.prompt('Enter ward id to allocate (optional, leave blank to skip):');
+    const nurseInput = window.prompt('Enter nurse id to assign (optional, leave blank to skip):');
+
+    const body = {};
+    if (wardInput) body.wardId = parseInt(wardInput);
+    if (nurseInput) body.nurseId = parseInt(nurseInput);
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/v1/visits/${visitNumericId}/admit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to admit');
+      alert('Admitted: ' + (data.message || 'Success'));
+      // Refresh visit data
+      window.location.reload();
+    } catch (err) {
+      console.error('Admit failed', err);
+      alert('Admit failed: ' + (err.message || err));
+    }
   };
 
   return (
@@ -71,48 +132,84 @@ export default function MedicalEncounter() {
               <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             </Link>
 
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="w-10 h-10 shrink-0 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-mono font-bold text-sm">
-                SJ
+            {loading ? (
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 shrink-0 rounded-full bg-slate-200 animate-pulse"></div>
+                <div className="space-y-1">
+                  <div className="h-4 w-32 bg-slate-200 rounded animate-pulse"></div>
+                  <div className="h-3 w-24 bg-slate-200 rounded animate-pulse"></div>
+                </div>
               </div>
-              <div className="min-w-0">
-                <h1 className="truncate text-sm font-bold text-slate-900">
-                  {patient.name}
-                </h1>
-                <span className="font-mono text-xs text-slate-500">
-                  {patient.matric}
-                </span>
+            ) : error ? (
+              <div className="flex items-center gap-3 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+                <span className="text-sm text-red-600">Error: {error}</span>
               </div>
-            </div>
+            ) : patient ? (
+              <>
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="w-10 h-10 shrink-0 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-mono font-bold text-sm">
+                    {patient.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                  </div>
+                  <div className="min-w-0">
+                    <h1 className="truncate text-sm font-bold text-slate-900">
+                      {patient.name}
+                    </h1>
+                    <span className="font-mono text-xs text-slate-500">
+                      {patient.matric}
+                    </span>
+                  </div>
+                </div>
 
-            <div className="px-2.5 py-1 bg-red-50 text-red-700 rounded-md flex items-center gap-1.5 border border-red-100 sm:ml-2">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              <span className="font-mono text-[10px] font-bold uppercase tracking-wider">
-                {patient.urgency}
-              </span>
-            </div>
+                <div className="px-2.5 py-1 bg-red-50 text-red-700 rounded-md flex items-center gap-1.5 border border-red-100 sm:ml-2">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider">
+                    {patient.urgency}
+                  </span>
+                </div>
+              </>
+            ) : null}
           </div>
-
-          {/* <div className="flex items-center justify-end gap-3 sm:gap-4">
-            <button className="text-slate-400 hover:text-indigo-600 transition-colors">
-              <Bell className="w-5 h-5" />
-            </button>
-            <div className="hidden h-6 w-[1px] bg-slate-200 sm:block"></div>
-            <div className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 p-1.5 pr-3 rounded-lg transition-colors border border-transparent hover:border-slate-200">
-              <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 text-xs font-bold">
-                DR
-              </div>
-              <span className="text-xs font-medium text-slate-600 hidden md:block">
-                Dr. A. Smith
-              </span>
-              <ChevronDown className="w-4 h-4 text-slate-400" />
-            </div>
-          </div> */}
         </div>
       </header>
 
-      {/* Main Content Split */}
-      <main className="flex-1 flex flex-col overflow-visible lg:flex-row lg:overflow-hidden">
+      {/* Loading State */}
+      {loading && (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            </div>
+            <p className="mt-4 text-slate-600">Loading patient data...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-md">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-50 mb-4">
+              <AlertTriangle className="w-6 h-6 text-red-600" />
+            </div>
+            <h2 className="text-lg font-bold text-slate-900 mb-2">Error Loading Patient</h2>
+            <p className="text-slate-600 mb-6">{error}</p>
+            <Link
+              href="/doctor"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Dashboard
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content (visible when loaded) */}
+      {!loading && !error && patient && (
+        <>
+          {/* Main Content Split */}
+          <main className="flex-1 flex flex-col overflow-visible lg:flex-row lg:overflow-hidden">
         {/* Left Column: Patient Context (30%) */}
         <aside className="w-full lg:w-[320px] xl:w-[400px] bg-slate-50 border-b border-slate-200 lg:border-b-0 lg:border-r flex flex-col z-0 shrink-0 lg:h-auto">
           {/* Vitals Section */}
@@ -303,6 +400,10 @@ export default function MedicalEncounter() {
                   <Pill className="h-4 w-4 text-slate-400" />
                   <span>Prescribe</span>
                 </button>
+                <button onClick={admitAndAllocate} className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-left text-xs font-mono font-medium text-white transition-colors hover:bg-indigo-700 bg-amber-600">
+                  <Stethoscope className="h-4 w-4 text-white" />
+                  <span>Admit & Allocate</span>
+                </button>
                 <button className="flex items-center gap-3 rounded-lg bg-indigo-600 px-3 py-2.5 text-left text-xs font-mono font-bold text-white shadow-sm transition-colors hover:bg-indigo-700">
                   <CheckCircle2 className="h-4 w-4" />
                   <span>Discharge</span>
@@ -330,6 +431,8 @@ export default function MedicalEncounter() {
           </div>
         </section>
       </main>
+        </>
+      )}
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
   LogOut,
   Bell,
   UserCircle,
+  Building2,
 } from "lucide-react";
 import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
@@ -37,12 +38,11 @@ export default function RootLayout({ children }) {
     { name: "Consultations", href: "/doctor", icon: Stethoscope },
     { name: "Laboratory", href: "/lab", icon: TestTube2 },
     { name: "Pharmacy", href: "/pharmacy", icon: Pill },
+    { name: "Resources", href: "/resources", icon: Building2 },
     { name: "Staff Admin", href: "/admin", icon: Settings },
   ];
 
-  const notifications = [];
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <html lang="en">
@@ -107,7 +107,6 @@ export default function RootLayout({ children }) {
 
                 <nav className=" flex-1 space-y-1 overflow-y-auto font-mono">
                   {navigationLinks.map((item) => {
-                    const Icon = item.icon;
                     const isActive = pathname.startsWith(item.href);
                     return (
                       <Link
@@ -120,9 +119,6 @@ export default function RootLayout({ children }) {
                             : "text-black hover:bg-slate-50 hover:text-slate-900"
                         }`}
                       >
-                        {/* <Icon
-                          className={`w-4 h-3 md:w-5 md:h-5 ${isActive ? "text-indigo-600" : "text-black"}`}
-                        /> */}
                         {item.name}
                       </Link>
                     );

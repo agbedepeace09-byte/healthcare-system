@@ -1,8 +1,12 @@
+const path = require("path");
 try {
-  require("dotenv").config();
-} catch {} // dotenv is optional
+  require("dotenv").config({ path: path.resolve(__dirname, ".env") });
+} catch (e) {
+  console.warn("dotenv failed to load:", e.message);
+}
 const express = require("express");
 const cors = require("cors");
+const prisma = require("./prismaClient");
 
 // Import the modular routers
 const authRoutes = require("./routes/auth");
@@ -13,6 +17,7 @@ const pharmacyRoutes = require("./routes/pharmacy");
 const staffRoutes = require("./routes/staff");
 const visitsRoutes = require("./routes/visits");
 const vitalsRoutes = require("./routes/vitals");
+const resourcesRoutes = require("./routes/resources");
 
 const app = express();
 
@@ -37,9 +42,35 @@ app.use(`${API_PREFIX}/pharmacy`, pharmacyRoutes);
 app.use(`${API_PREFIX}/staff`, staffRoutes);
 app.use(`${API_PREFIX}/visits`, visitsRoutes);
 app.use(`${API_PREFIX}/vitals`, vitalsRoutes);
+app.use(`${API_PREFIX}`, resourcesRoutes);
+
+// 404 handler for unmatched API routes under the API prefix
+app.use((req, res, next) => {
+  if (req.originalUrl && req.originalUrl.startsWith(API_PREFIX)) {
+    return res.status(404).json({ error: `Route ${req.method} ${req.originalUrl} not found.` });
+  }
+  return next();
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ error: "Internal server error." });
+});
 
 // Start the server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+// Graceful shutdown
+const gracefulShutdown = async (signal) => {
+  console.log(`\n${signal} received. Shutting down gracefully...`);
+  server.close(async () => {
+    await prisma.$disconnect();
+    process.exit(0);
+  });
+};
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));

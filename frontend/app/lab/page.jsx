@@ -1,10 +1,9 @@
 "use client";
 
-import { useMemo, useRef, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Beaker,
-  Microscope,
   ChevronLeft,
   ChevronRight,
   X,
@@ -12,110 +11,16 @@ import {
   FileText,
 } from "lucide-react";
 
-const priorityColors = {
-  high: "bg-[#ba1a1a]",
-  medium: "bg-[#bc4800]",
-  low: "bg-[#c3c6d7]",
-};
-
-const fallbackLabRequests = [
-  {
-    id: "LB-401",
-    patient: "Sarah Jenkins",
-    doctor: "Dr. A. Mercer",
-    test: "Complete Blood Count (CBC)",
-    date: "Oct 24, 08:30 AM",
-    priority: "high",
-    status: "pending",
-  },
-  {
-    id: "LB-402",
-    patient: "Michael Chen",
-    doctor: "Dr. L. Vance",
-    test: "Lipid Profile",
-    date: "Oct 24, 09:15 AM",
-    priority: "medium",
-    status: "in-progress",
-  },
-  {
-    id: "LB-403",
-    patient: "Emma Roberts",
-    doctor: "Dr. S. Patel",
-    test: "Urinalysis",
-    date: "Oct 24, 10:00 AM",
-    priority: "low",
-    status: "pending",
-  },
-  {
-    id: "LB-404",
-    patient: "James Wilson",
-    doctor: "Dr. R. Chen",
-    test: "Comprehensive Metabolic Panel",
-    date: "Oct 24, 11:00 AM",
-    priority: "high",
-    status: "pending",
-  },
-  {
-    id: "LB-405",
-    patient: "Olivia Brown",
-    doctor: "Dr. J. Montague",
-    test: "Thyroid Function Panel",
-    date: "Oct 24, 11:30 AM",
-    priority: "low",
-    status: "completed",
-  },
-];
-
-function mapQueueToLabRequest(qp) {
-  return {
-    id: qp.appointmentId,
-    appointmentId: qp.appointmentId,
-    patient: qp.name,
-    doctor: qp.assignedDoctor || "Unassigned",
-    test: "Pending lab order — see request",
-    date: new Date(qp.checkedInAt).toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    priority: qp.waitingSeverity || "medium",
-    status: "pending",
-    fromQueue: true,
-  };
-}
-
-function mapStoredRequest(r) {
-  return {
-    id: r.id,
-    appointmentId: r.appointmentId || "",
-    patient: r.patientName || r.patient,
-    doctor: r.doctorName || r.doctor,
-    test: r.testType || r.test,
-    date: r.createdAt
-      ? new Date(r.createdAt).toLocaleString("en-US", {
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : r.date || "",
-    priority: r.priority || "medium",
-    status: r.status || "pending",
-    fromQueue: false,
-  };
-}
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function LabDashboard() {
   const [selectedRequest, setSelectedRequest] = useState(null);
-
-  // Mock data representing GET /api/v1/lab/queue
-  const mockLabQueue = [
+  const [mockLabQueue, setMockLabQueue] = useState([
     {
       id: 1,
       requestId: "REQ-901",
-      matric: "MCU/23/0142",
-      name: "Eleanor Vance",
+      matric: "220202007",
+      name: "oladapo olamiji",
       testType: "Complete Blood Count",
       doctor: "Dr. Montague",
       status: "PENDING",
@@ -123,8 +28,8 @@ export default function LabDashboard() {
     {
       id: 2,
       requestId: "REQ-902",
-      matric: "MCU/22/8831",
-      name: "Theodora Crain",
+      matric: "220202008",
+      name: "Bello mayokun",
       testType: "Lipid Panel",
       doctor: "Dr. Markway",
       status: "PENDING",
@@ -132,8 +37,8 @@ export default function LabDashboard() {
     {
       id: 3,
       requestId: "REQ-903",
-      matric: "MCU/24/0092",
-      name: "Luke Sanderson",
+      matric: "220202009",
+      name: "Babatunde Oyindamola",
       testType: "Urinalysis",
       doctor: "Dr. Dudley",
       status: "PENDING",

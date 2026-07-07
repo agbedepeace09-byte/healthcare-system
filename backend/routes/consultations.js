@@ -6,6 +6,7 @@ const prisma = require("../prismaClient");
 router.get("/history/:patientId", async (req, res) => {
   try {
     const patientId = parseInt(req.params.patientId);
+    if (isNaN(patientId)) return res.status(400).json({ error: "Invalid patient ID." });
 
     const history = await prisma.visit.findMany({
       where: { patientId, status: "DISCHARGED" },
@@ -30,6 +31,7 @@ router.get("/history/:patientId", async (req, res) => {
 router.post("/:visitId/notes", async (req, res) => {
   try {
     const visitId = parseInt(req.params.visitId);
+    if (isNaN(visitId)) return res.status(400).json({ error: "Invalid visit ID." });
     const { patientId, doctorId, symptoms, diagnosis } = req.body;
 
     const note = await prisma.clinicalNote.create({
@@ -47,6 +49,7 @@ router.post("/:visitId/notes", async (req, res) => {
 router.post("/:noteId/extract-entities", async (req, res) => {
   try {
     const noteId = parseInt(req.params.noteId);
+    if (isNaN(noteId)) return res.status(400).json({ error: "Invalid note ID." });
 
     const note = await prisma.clinicalNote.findUnique({
       where: { id: noteId },

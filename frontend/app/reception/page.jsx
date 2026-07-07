@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   UserPlus,
@@ -14,16 +14,16 @@ import {
   QrCode,
 } from "lucide-react";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 export default function ReceptionDashboard() {
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
-
-  // Mock data representing what will be fetched from GET /api/v1/visits/queue?status=WAITING_TRIAGE
-  const mockQueue = [
+  const [mockQueue, setMockQueue] = useState([
     {
       id: 1,
-      matric: "MCU/21/0452",
-      name: "Oluwaseun Adebayo",
+      matric: "220202006",
+      name: "okodugha peter",
       dept: "Computer Science",
       timeIn: "08:45 AM",
       status: "High Priority",
@@ -31,8 +31,8 @@ export default function ReceptionDashboard() {
     },
     {
       id: 2,
-      matric: "MCU/22/1034",
-      name: "Chioma Okoro",
+      matric: "220202010",
+      name: "abayomi gabriel",
       dept: "Mass Communication",
       timeIn: "09:12 AM",
       status: "Waiting",
@@ -40,14 +40,44 @@ export default function ReceptionDashboard() {
     },
     {
       id: 3,
-      matric: "MCU/23/2110",
-      name: "Amina Musa",
-      dept: "Biochemistry",
+      matric: "220202015",
+      name: "uthman hameedah",
+      dept: "nursing",
       timeIn: "09:45 AM",
       status: "Waiting",
       isUrgent: false,
     },
-  ];
+  ]);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const fetchQueue = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/visits/queue?status=WAITING_TRIAGE`);
+        if (!res.ok) throw new Error("Failed to load reception queue");
+        const data = await res.json();
+        setMockQueue(
+          data.map((visit) => ({
+            id: visit.id,
+            matric: visit.patient?.matricNumber || "",
+            name: `${visit.patient?.firstName || ""} ${visit.patient?.lastName || ""}`.trim(),
+            dept: visit.patient?.department || "",
+            timeIn: visit.checkInTime
+              ? new Date(visit.checkInTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+              : "N/A",
+            status: visit.urgency === "EMERGENCY" ? "High Priority" : "Waiting",
+            isUrgent: visit.urgency === "EMERGENCY",
+          }))
+        );
+      } catch (err) {
+        console.warn("Reception queue API failed, using mock data", err);
+        setErrorMessage(err.message || "Unable to load reception queue.");
+      }
+    };
+
+    fetchQueue();
+  }, []);
+
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6">

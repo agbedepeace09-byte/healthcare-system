@@ -28,12 +28,9 @@ router.post("/login", async (req, res) => {
       { expiresIn: "12h" },
     );
 
-    // Temporary bypass until JWT/bcrypt is configured
-    const mockToken = "mock_jwt_token_for_development";
-
     res.status(200).json({
       message: "Login successful",
-      token: mockToken,
+      token,
       user: {
         id: staff.id,
         name: `${staff.firstName} ${staff.lastName}`,

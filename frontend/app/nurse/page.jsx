@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Thermometer,
   HeartPulse,
@@ -12,36 +12,71 @@ import {
   Clock,
 } from "lucide-react";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
 export default function NurseTriageDashboard() {
   const [selectedVisit, setSelectedVisit] = useState(null);
-
-  // Mock data representing GET /api/v1/visits/queue?status=WAITING_TRIAGE
-  const mockQueue = [
+  const [mockQueue, setMockQueue] = useState([
     {
       id: 1,
       visitId: "VST-1709",
-      matric: "MCU/21/0452",
-      name: "Sarah Jenkins",
+      matric: "220202006",
+      name: "okodugha peter",
       timeIn: "08:14 AM",
       waitTime: "42m",
     },
     {
       id: 2,
       visitId: "VST-1710",
-      matric: "MCU/22/1034",
-      name: "Michael Chang",
+      matric: "220202010",
+      name: "abayomi gabriel",
       timeIn: "08:30 AM",
       waitTime: "26m",
     },
     {
       id: 3,
       visitId: "VST-1711",
-      matric: "MCU/23/2110",
-      name: "Emily Rodriguez",
+      matric: "220202015",
+      name: "uthman hameedah",
       timeIn: "08:45 AM",
       waitTime: "11m",
     },
-  ];
+  ]);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const fetchQueue = async () => {
+      setLoading(true);
+      setErrorMessage("");
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/visits/queue?status=WAITING_TRIAGE`);
+        if (!res.ok) throw new Error("Failed to load triage queue");
+        const data = await res.json();
+        setMockQueue(
+          data.map((visit) => ({
+            id: visit.id,
+            visitId: visit.visitId,
+            matric: visit.patient?.matricNumber || "",
+            name: `${visit.patient?.firstName || ""} ${visit.patient?.lastName || ""}`.trim(),
+            timeIn: visit.checkInTime
+              ? new Date(visit.checkInTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+              : "N/A",
+            waitTime: "Unknown",
+          }))
+        );
+      } catch (err) {
+        console.warn("Triage queue API failed, using mock data", err);
+        setErrorMessage(err.message || "Unable to load triage queue.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQueue();
+  }, []);
+
 
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col relative h-[calc(100vh-120px)]">
